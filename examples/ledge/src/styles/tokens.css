@@ -1,42 +1,51 @@
 /*
- * LEDGE design tokens.
+ * LEDGE is a machine, so the palette is materials rather than a colour scheme: brushed
+ * plate, walnut trim, brass hardware and filament bulbs. The cabinet flips with the theme;
+ * the interior behind the glass stays dark in both, because you are looking *into* a
+ * machine and the coins must always read as lit metal.
  *
- * Warm stone neutrals with two accents: gold (the coins themselves) and teal (interactive
- * affordances). Light by default; the host's `ui.theme` and the OS preference both switch
- * it. Every pairing below clears 4.5:1 for body text and 3:1 for UI boundaries.
+ * Every pairing below clears 4.5:1 for body text and 3:1 for interactive borders, checked
+ * by contrast.test.ts, which reads these values straight out of this file.
  */
 :root {
-  --bg: #f5f4f1;
-  --surface: #ffffff;
-  --recess: #e8e5df;
-  --ledge: #ddd8cf;
-  --ledge-face: #c9c2b6;
-  --line: #d6d2ca;
-  --line-strong: #8a867e;
+  /* cabinet */
+  --bg: #e6e0d4;
+  --surface: #f4f0e7;
+  --recess: #d8d1c1;
+  --line: #c6bda9;
+  --line-strong: #887e66;
 
-  --ink: #1c1a17;
-  --ink-dim: #57534e;
-  --ink-fade: #6e6860;
+  /* the dark interior, identical in both themes */
+  --felt: #171c1a;
+  --felt-deep: #0e1211;
+  --glass: rgb(255 255 255 / 0.05);
 
-  --beam: #b9ad97;
-  --beam-face: #8e8371;
-  --beam-edge: #6d6455;
-  --felt: #ecebe6;
-  --felt-deep: #e2e0d8;
-  --brass: #8a6d2f;
+  /* trim and hardware */
+  --walnut: #6b4e32;
+  --beam: #8a6a45;
+  --beam-face: #5d4430;
+  --beam-edge: #3b2b1d;
 
-  --gold: #b45309;
-  --gold-bright: #f59e0b;
-  --gold-face: #fcd34d;
-  --gold-edge: #a16207;
+  /* type */
+  --ink: #221c12;
+  --ink-dim: #4f4636;
+  --ink-fade: #6a6049;
 
-  --teal: #0f766e;
-  --teal-soft: #ccfbf1;
+  /* brass: --gold is the text-safe tone, the others are for metal */
+  --gold: #7d5f16;
+  --gold-bright: #e0a82e;
+  --gold-face: #f7d675;
+  --gold-edge: #8a6712;
+  --bulb: #f2b32c;
 
-  --win: #15803d;
-  --loss: #b91c1c;
+  /* the single second accent */
+  --teal: #12655a;
+  --teal-soft: #c8e6e0;
 
-  --radius: 10px;
+  --win: #1c6b34;
+  --loss: #a8321f;
+
+  --radius: 6px;
   --radius-pill: 999px;
 
   --space-1: 4px;
@@ -52,89 +61,87 @@
   --duration-base: 180ms;
   --duration-lane: 200ms;
 
-  --shadow-card: 0 1px 2px rgb(28 26 23 / 0.06), 0 8px 24px rgb(28 26 23 / 0.05);
-  --shadow-coin: 0 1px 1px rgb(120 80 10 / 0.35);
+  --shadow-plate:
+    inset 0 1px 0 rgb(255 255 255 / 0.55),
+    inset 0 -1px 0 rgb(0 0 0 / 0.08),
+    0 1px 2px rgb(34 28 18 / 0.14);
+  --shadow-card: var(--shadow-plate);
+  --shadow-coin: 0 1px 1px rgb(60 40 5 / 0.4);
   --focus: 0 0 0 3px var(--teal-soft), 0 0 0 5px var(--teal);
-}
-
-:root[data-theme='dark'],
-:root:not([data-theme='light']) {
-  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
 
-    --bg: #171614;
-    --surface: #221f1c;
-    --recess: #12110f;
-    --ledge: #2d2924;
-    --ledge-face: #1d1a16;
-    --line: #35312c;
-    --line-strong: #7a7164;
+    --bg: #17120c;
+    --surface: #241d14;
+    --recess: #120e09;
+    --line: #382c1e;
+    --line-strong: #7a674b;
 
-    --ink: #f5f2ec;
-    --ink-dim: #b5aea4;
-    --ink-fade: #968f84;
+    --walnut: #4a3722;
+    --beam: #6f5435;
+    --beam-face: #402f1e;
+    --beam-edge: #241a10;
 
-    --beam: #3a342b;
-    --beam-face: #241f19;
-    --beam-edge: #514839;
-    --felt: #1c1a17;
-    --felt-deep: #141311;
-    --brass: #d4af5f;
+    --ink: #f6f0e2;
+    --ink-dim: #c3b69d;
+    --ink-fade: #9b8e77;
 
-    --beam: #3a342b;
-  --beam-face: #241f19;
-  --beam-edge: #514839;
-  --felt: #1c1a17;
-  --felt-deep: #141311;
-  --brass: #d4af5f;
+    --gold: #e2ae45;
+    --gold-bright: #e0a82e;
+    --gold-face: #f7d675;
+    --gold-edge: #8a6712;
 
-  --gold: #fbbf24;
-    --gold-bright: #f59e0b;
-    --gold-face: #fde68a;
-    --gold-edge: #b45309;
+    --teal: #47c4b2;
+    --teal-soft: #0c3b35;
 
-    --teal: #2dd4bf;
-    --teal-soft: #134e4a;
+    --win: #52c97a;
+    --loss: #f07a63;
 
-    --win: #4ade80;
-    --loss: #f87171;
-
-    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.3);
-    --focus: 0 0 0 3px var(--teal-soft), 0 0 0 5px var(--teal);
+    --shadow-plate:
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      inset 0 -1px 0 rgb(0 0 0 / 0.5),
+      0 2px 6px rgb(0 0 0 / 0.5);
+    --shadow-card: var(--shadow-plate);
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --bg: #171614;
-  --surface: #221f1c;
-  --recess: #12110f;
-  --ledge: #2d2924;
-  --ledge-face: #1d1a16;
-  --line: #35312c;
-  --line-strong: #7a7164;
+  --bg: #17120c;
+  --surface: #241d14;
+  --recess: #120e09;
+  --line: #382c1e;
+  --line-strong: #7a674b;
 
-  --ink: #f5f2ec;
-  --ink-dim: #b5aea4;
-  --ink-fade: #968f84;
+  --walnut: #4a3722;
+  --beam: #6f5435;
+  --beam-face: #402f1e;
+  --beam-edge: #241a10;
 
-  --gold: #fbbf24;
-  --gold-bright: #f59e0b;
-  --gold-face: #fde68a;
-  --gold-edge: #b45309;
+  --ink: #f6f0e2;
+  --ink-dim: #c3b69d;
+  --ink-fade: #9b8e77;
 
-  --teal: #2dd4bf;
-  --teal-soft: #134e4a;
+  --gold: #e2ae45;
+  --gold-bright: #e0a82e;
+  --gold-face: #f7d675;
+  --gold-edge: #8a6712;
 
-  --win: #4ade80;
-  --loss: #f87171;
+  --teal: #47c4b2;
+  --teal-soft: #0c3b35;
 
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.3);
+  --win: #52c97a;
+  --loss: #f07a63;
+
+  --shadow-plate:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    inset 0 -1px 0 rgb(0 0 0 / 0.5),
+    0 2px 6px rgb(0 0 0 / 0.5);
+  --shadow-card: var(--shadow-plate);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -153,7 +160,7 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--surface);
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;

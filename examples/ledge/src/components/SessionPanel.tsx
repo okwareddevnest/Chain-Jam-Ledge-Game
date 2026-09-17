@@ -1,4 +1,5 @@
 import { formatAmount, formatPercent } from '../lib/format';
+import { Odometer } from './Odometer';
 import type { SessionStats } from '../lib/useSessionStats';
 
 type SessionPanelProps = {
@@ -18,18 +19,22 @@ export function SessionPanel({ stats, observedReturn, decimals, symbol }: Sessio
       <dl className="stats">
         <div className="stat">
           <dt>Rounds</dt>
-          <dd>{stats.rounds}</dd>
+          <dd>
+            <Odometer value={String(stats.rounds)} size="sm" label="Rounds" />
+          </dd>
         </div>
         <div className="stat">
-          <dt>Wagered</dt>
+          <dt>Staked</dt>
           <dd>
-            {formatAmount(stats.wagered, decimals)} <em>{symbol}</em>
+            <Odometer value={formatAmount(stats.wagered, decimals)} size="sm" label="Wagered" />
+            <em>{symbol}</em>
           </dd>
         </div>
         <div className="stat">
           <dt>Returned</dt>
           <dd>
-            {formatAmount(stats.returned, decimals)} <em>{symbol}</em>
+            <Odometer value={formatAmount(stats.returned, decimals)} size="sm" label="Returned" />
+            <em>{symbol}</em>
           </dd>
         </div>
         <div className="stat">

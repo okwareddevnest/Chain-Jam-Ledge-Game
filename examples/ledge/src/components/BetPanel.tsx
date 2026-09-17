@@ -1,4 +1,5 @@
 import { N_COINS, type Preset } from '../lib/ledge';
+import { Lever } from './Lever';
 import { SpreadPresets } from './SpreadPresets';
 
 type BetPanelProps = {
@@ -90,10 +91,7 @@ export function BetPanel({
         <span className="topline__value">{maxPayoutText ?? '—'}</span>
       </div>
 
-      <button type="button" className="drop" onClick={onDrop} disabled={!canDrop}>
-        <span className="drop__label">{busyLabel ?? 'Drop the coins'}</span>
-        {busyLabel && <span className="drop__pulse" aria-hidden="true" />}
-      </button>
+      <Lever disabled={!canDrop} busyLabel={busyLabel} onPull={onDrop} />
     </section>
   );
 }

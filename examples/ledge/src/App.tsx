@@ -5,10 +5,10 @@ import { formatUnits, parseUnits } from 'viem';
 import { Board } from './components/Board';
 import { BetPanel } from './components/BetPanel';
 import { FairnessPanel } from './components/FairnessPanel';
-import { HistoryStrip } from './components/HistoryStrip';
-import { Hud } from './components/Hud';
+import { Marquee } from './components/Marquee';
 import { LastRound } from './components/LastRound';
 import { Paytable } from './components/Paytable';
+import { ReceiptTape } from './components/ReceiptTape';
 import { SessionPanel } from './components/SessionPanel';
 import { formatAmount } from './lib/format';
 import {
@@ -144,14 +144,19 @@ export function App() {
 
     if (multiplier >= 50) {
       play('jackpot');
+      play('bell', { tier: 1 });
+      window.setTimeout(() => play('hopper', { tier: 1 }), 680);
       buzz([40, 60, 40, 60, 120]);
       setCelebration('jackpot');
     } else if (multiplier >= 15) {
       play('bigwin');
+      play('bell', { tier: 0.6 });
+      window.setTimeout(() => play('hopper', { tier: 0.6 }), 420);
       buzz([30, 50, 30]);
       setCelebration('big');
     } else if (multiplier > 0) {
       play('win');
+      window.setTimeout(() => play('hopper', { tier: Math.min(multiplier / 10, 0.35) }), 260);
       buzz(22);
       setCelebration('win');
       if (nearMiss) window.setTimeout(() => play('nearmiss'), 420);
@@ -219,7 +224,9 @@ export function App() {
 
   const handleDrop = useCallback(() => {
     if (!canDrop) return;
-    play('release');
+    play('lever');
+    buzz([12, 24, 40]);
+    window.setTimeout(() => play('release'), 190);
     drop(allocation, wager);
   }, [canDrop, drop, allocation, wager]);
 
@@ -294,11 +301,12 @@ export function App() {
       data-celebrate={celebration ?? undefined}
       style={availableHeight ? ({ '--app-height': `${availableHeight}px` } as React.CSSProperties) : undefined}
     >
-      <Hud
+      <Marquee
         balance={formatAmount(balance, decimals)}
         symbol={symbol}
-        isDemo={isDemo}
         network={network}
+        isDemo={isDemo}
+        live={round.phase === 'waiting' || round.phase === 'revealing'}
         muted={muted}
         onToggleMute={toggleMute}
       />
@@ -312,6 +320,7 @@ export function App() {
             symbol={symbol}
           />
           <Paytable allocation={round.toppled ? round.allocation : allocation} />
+          <ReceiptTape history={stats.history} decimals={decimals} />
         </aside>
 
         <main className="layout__stage">
@@ -372,7 +381,6 @@ export function App() {
         </aside>
       </div>
 
-      <HistoryStrip history={stats.history} />
     </div>
   );
 }

@@ -25,7 +25,10 @@ export type Voice =
   | 'bigwin'
   | 'jackpot'
   | 'bust'
-  | 'streak';
+  | 'streak'
+  | 'lever'
+  | 'bell'
+  | 'hopper';
 
 export type VoiceOptions = {
   /** 0–1, how far up the prize ladder this moment sits. Shifts pitch and weight. */
@@ -363,8 +366,55 @@ export const scheduleVoice = (
     case 'streak':
       ping(ctx, out, 700 * (1 + tier * 1.1), now, 0.28, 0.2, 'sine');
       break;
+
+    // The lever: spring tension, the throw, then the mechanism seating itself.
+    case 'lever': {
+      const spring = ctx.createBufferSource();
+      const springEnv = ctx.createGain();
+      const springFilter = ctx.createBiquadFilter();
+
+      spring.buffer = noiseBuffer(ctx, 0.2, 3);
+      springFilter.type = 'bandpass';
+      springFilter.frequency.setValueAtTime(2600, now);
+      springFilter.frequency.exponentialRampToValueAtTime(800, now + 0.18);
+      springFilter.Q.value = 3;
+
+      springEnv.gain.setValueAtTime(0.3, now);
+      springEnv.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+
+      spring.connect(springFilter).connect(springEnv).connect(out);
+      spring.start(now);
+
+      thud(ctx, out, now + 0.14, 0.44);
+      ping(ctx, out, 320, now + 0.16, 0.2, 0.1, 'square');
+      break;
+    }
+
+    // A struck bell: inharmonic partials, which is what stops it sounding like a beep.
+    case 'bell': {
+      const base = 660 * (1 + tier * 0.5);
+      BELL_PARTIALS.forEach((ratio, index) => {
+        ping(ctx, out, base * ratio, now, 0.2 / (index + 1), 1.1 - index * 0.16, 'sine');
+      });
+      break;
+    }
+
+    // Coins hitting a metal tray. Longer and denser the more there are to pay out.
+    case 'hopper': {
+      const coins = 6 + Math.round(tier * 26);
+      const window = 0.35 + tier * 0.9;
+
+      for (let i = 0; i < coins; i += 1) {
+        const at = now + (i / coins) * window + Math.random() * 0.03;
+        ping(ctx, out, 1500 + Math.random() * 2200, at, 0.2 + Math.random() * 0.14, 0.1);
+        if (i % 4 === 0) thud(ctx, out, at, 0.1);
+      }
+      break;
+    }
   }
 };
+
+const BELL_PARTIALS = [1, 2.76, 5.4, 8.93];
 
 export const play = (voice: Voice, options: VoiceOptions = {}): void => {
   const ctx = ensureContext();
