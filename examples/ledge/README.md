@@ -62,16 +62,57 @@ This runs the same 126-allocation, 150-seed parity proof against the deployed by
 
 ### 3. Host the frontend
 
-`vercel.json` and `netlify.toml` are configured and build from the **repo root** — the game
-is a workspace package depending on `@chain/casino-sdk` via `file:../..` and will not build
-from `examples/ledge` alone.
+**Deploy from the repository root, not from `examples/ledge`.**
+
+In the Vercel dashboard leave **Root Directory** blank (`./`). The game is a workspace
+package that depends on `@chain/casino-sdk` via `file:../..`, so installing from
+`examples/ledge` cannot resolve it and the build fails. `vercel.json` at the repo root
+already sets everything:
+
+| Setting | Value | Where it comes from |
+| ------- | ----- | ------------------- |
+| Root Directory | *(blank — the repo root)* | set in the Vercel dashboard |
+| Framework Preset | Other | set in the Vercel dashboard |
+| Install Command | `npm ci` | `vercel.json` |
+| Build Command | `npm run build:ledge` | `vercel.json` |
+| Output Directory | `examples/ledge/dist` | `vercel.json` |
+
+Leave the install/build/output fields untouched in the dashboard so `vercel.json` wins.
 
 ```sh
-npx vercel --prod          # or: npx netlify deploy --prod
+npx vercel --prod          # run from the repo root
+# or
+npx netlify deploy --prod  # netlify.toml already sets base, command and publish
 ```
 
-Both open CORS on `game.manifest.json`, which the host fetches cross-origin, and neither
-sets a frame-blocking header.
+Both open CORS on `game.manifest.json`, which the host fetches cross-origin, and both send
+`frame-ancestors 'self' https://chain.wtf https://*.chain.wtf` so only the casino and the
+jam gallery can frame the game.
+
+Verified from a clean clone: `npm ci && npm run build:ledge` produces
+`examples/ledge/dist/` with `index.html`, `game.manifest.json`, `icon.svg`, `cover.svg`
+and hashed assets.
+
+### 3a. Two edits once you know the domain
+
+Both need an absolute URL, so they cannot be filled in before the first deploy. The host
+passes manifest asset URLs through untouched (`src/manifest.ts:115-130`) — a relative path
+would resolve against *its* origin, not yours.
+
+In `public/game.manifest.json`, add:
+
+```json
+"assets": {
+  "iconUrl": "https://YOUR-DOMAIN/icon.svg",
+  "coverUrl": "https://YOUR-DOMAIN/cover.svg"
+}
+```
+
+In `index.html`, make the social image absolute:
+
+```html
+<meta property="og:image" content="https://YOUR-DOMAIN/cover.svg" />
+```
 
 ### 4. Hand the address to Chain.wtf
 
@@ -93,6 +134,9 @@ entry are theirs to do — send them the deployed address and the hosted URL.
 | `src/lib/sound.ts` | Synthesised foley — no audio files, nothing to download |
 | `src/components/Board.tsx` | The ledge, the piles, the cascade |
 | `public/game.manifest.json` | Host manifest (`gameId: LedgeGame` → canonical `ledge`) |
+| `public/icon.svg`, `public/cover.svg` | Favicon and catalog art |
+| `src/components/Logo.tsx` | The mark, inline so it costs no request |
+| `ARCHITECTURE.md` | Bet lifecycle, round state machine, trust boundary (mermaid) |
 
 ## Tests
 

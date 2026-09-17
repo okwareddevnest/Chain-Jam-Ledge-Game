@@ -1,3 +1,5 @@
+import { Logo } from './Logo';
+
 type HudProps = {
   balance: string;
   symbol: string;
@@ -11,7 +13,7 @@ export function Hud({ balance, symbol, isDemo, network, muted, onToggleMute }: H
   return (
     <header className="hud">
       <div className="hud__brand">
-        <span className="hud__mark" aria-hidden="true" />
+        <Logo size={24} />
         <h1 className="hud__title">LEDGE</h1>
         <span className="hud__tag">{isDemo ? 'Demo · play money' : (network ?? 'On chain')}</span>
       </div>

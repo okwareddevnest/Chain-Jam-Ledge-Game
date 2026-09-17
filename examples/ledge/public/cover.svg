@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#211e1a"/>
+      <stop offset="1" stop-color="#121110"/>
+    </linearGradient>
+    <linearGradient id="coin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="0.52" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#a16207"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4b4336"/>
+      <stop offset="0.5" stop-color="#2d2924"/>
+      <stop offset="1" stop-color="#1b1813"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <text x="86" y="128" fill="#f5f2ec" font-family="'Space Grotesk',system-ui,sans-serif"
+        font-size="76" font-weight="700" letter-spacing="18">LEDGE</text>
+  <text x="90" y="176" fill="#b5aea4" font-family="'Space Grotesk',system-ui,sans-serif"
+        font-size="25" font-weight="500">Five piles. Five coins. Topple what you can.</text>
+
+  <!-- five piles, priced left to right, resting on the beam -->
+  <g stroke="#a16207" stroke-width="1.6" fill="url(#coin)">
+    <g transform="translate(220,470)">
+      <ellipse cy="0" rx="46" ry="13"/><ellipse cy="-21" rx="46" ry="13"/><ellipse cy="-42" rx="46" ry="13"/>
+    </g>
+    <g transform="translate(412,470)">
+      <ellipse cy="0" rx="46" ry="13"/><ellipse cy="-21" rx="46" ry="13"/><ellipse cy="-42" rx="46" ry="13"/>
+      <ellipse cy="-63" rx="46" ry="13"/><ellipse cy="-84" rx="46" ry="13"/>
+    </g>
+    <g transform="translate(604,470)">
+      <ellipse cy="0" rx="46" ry="13"/><ellipse cy="-21" rx="46" ry="13"/><ellipse cy="-42" rx="46" ry="13"/>
+      <ellipse cy="-63" rx="46" ry="13"/><ellipse cy="-84" rx="46" ry="13"/><ellipse cy="-105" rx="46" ry="13"/>
+      <ellipse cy="-126" rx="46" ry="13"/><ellipse cy="-147" rx="46" ry="13"/>
+    </g>
+    <g transform="translate(796,470)">
+      <ellipse cy="0" rx="46" ry="13"/><ellipse cy="-21" rx="46" ry="13"/><ellipse cy="-42" rx="46" ry="13"/>
+      <ellipse cy="-63" rx="46" ry="13"/><ellipse cy="-84" rx="46" ry="13"/><ellipse cy="-105" rx="46" ry="13"/>
+      <ellipse cy="-126" rx="46" ry="13"/><ellipse cy="-147" rx="46" ry="13"/><ellipse cy="-168" rx="46" ry="13"/>
+      <ellipse cy="-189" rx="46" ry="13"/><ellipse cy="-210" rx="46" ry="13"/>
+    </g>
+    <g transform="translate(988,470)">
+      <ellipse cy="0" rx="46" ry="13"/><ellipse cy="-21" rx="46" ry="13"/><ellipse cy="-42" rx="46" ry="13"/>
+      <ellipse cy="-63" rx="46" ry="13"/><ellipse cy="-84" rx="46" ry="13"/><ellipse cy="-105" rx="46" ry="13"/>
+      <ellipse cy="-126" rx="46" ry="13"/><ellipse cy="-147" rx="46" ry="13"/><ellipse cy="-168" rx="46" ry="13"/>
+      <ellipse cy="-189" rx="46" ry="13"/><ellipse cy="-210" rx="46" ry="13"/><ellipse cy="-231" rx="46" ry="13"/>
+      <ellipse cy="-252" rx="46" ry="13"/><ellipse cy="-273" rx="46" ry="13"/><ellipse cy="-294" rx="46" ry="13"/>
+    </g>
+  </g>
+
+  <!-- the beam everything rests on -->
+  <rect x="120" y="484" width="968" height="26" rx="6" fill="url(#beam)"/>
+  <rect x="120" y="484" width="968" height="4" rx="2" fill="#5d5443"/>
+
+  <g font-family="'Space Grotesk',system-ui,sans-serif" font-size="27" font-weight="700" fill="#fbbf24"
+     text-anchor="middle">
+    <text x="220" y="556">1x</text><text x="412" y="556">2x</text><text x="604" y="556">5x</text>
+    <text x="796" y="556">15x</text><text x="988" y="556">50x</text>
+  </g>
+
+  <text x="600" y="600" fill="#8b847a" font-family="'Space Grotesk',system-ui,sans-serif"
+        font-size="19" text-anchor="middle">96% RTP · provably fair · Chain Jam Vol. 1</text>
+</svg>

@@ -29,6 +29,7 @@ return wherever you drop it — the lane only chooses your volatility.
 | [`examples/ledge/DESIGN.md`](./examples/ledge/DESIGN.md) | The math, derived, and why the design is what it is |
 | [`examples/ledge/README.md`](./examples/ledge/README.md) | Run it, deploy it, host it |
 | [`simulator/contracts/LedgeGame.sol`](./simulator/contracts/LedgeGame.sol) | The game contract (`ICasinoGameV2`) |
+| [`examples/ledge/ARCHITECTURE.md`](./examples/ledge/ARCHITECTURE.md) | Bet lifecycle, state machine and trust boundary, in mermaid |
 | [`scripts/deploy-ledge.ts`](./scripts/deploy-ledge.ts) | Deploys to Base; dry run by default |
 
 ## Quick start
@@ -48,6 +49,13 @@ npm --prefix examples/ledge test    # 64 tests
 The suite includes a parity proof that runs the deployed contract against the TypeScript
 mirror over all 126 allocations and 150 random seeds, so the animation can never show one
 result while the chain pays another.
+
+## Live
+
+| | |
+| --- | --- |
+| Contract | [`0x5d07b33fa3c335b65b10313ff6b9db487020afc4`](https://sepolia.basescan.org/address/0x5d07b33fa3c335b65b10313ff6b9db487020afc4) on Base Sepolia |
+| Verified | All 126 allocations and 150 random seeds cross-checked against the deployed bytecode |
 
 ## Deploying
 
