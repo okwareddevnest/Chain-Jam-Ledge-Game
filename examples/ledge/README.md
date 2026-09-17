@@ -33,6 +33,53 @@ Opening <http://localhost:3101> directly runs the **standalone demo**: the same 
 against browser CSPRNG randomness with play money, which is what the jam requires of a
 submitted entry.
 
+## Deploying for real
+
+The local simulator is for development only. The shipped game runs against a contract
+deployed on Base and a frontend served from your own HTTPS origin.
+
+### 1. Deploy the contract
+
+```sh
+cp .env.example ../../.env.deploy   # then fill in RPC + deployer key
+cd ../..
+set -a; . ./.env.deploy; set +a
+npm run deploy:ledge                # dry run: compile, simulate, report gas. Sends nothing.
+LEDGE_CONFIRM=84532 npm run deploy:ledge   # broadcast to Base Sepolia
+```
+
+`.env.*` is gitignored. The key is never logged and never written to disk by the script.
+Broadcasting requires `LEDGE_CONFIRM` to equal the target chain id, so the default is
+always a dry run. The address, tx hash and block land in `deployments/<chainId>.json`.
+
+### 2. Verify the live contract against the TypeScript mirror
+
+```sh
+LEDGE_VERIFY_RPC_URL=https://sepolia.base.org LEDGE_VERIFY_ADDRESS=0xYourDeployedAddress npm --prefix examples/ledge test
+```
+
+This runs the same 126-allocation, 150-seed parity proof against the deployed bytecode.
+
+### 3. Host the frontend
+
+`vercel.json` and `netlify.toml` are configured and build from the **repo root** — the game
+is a workspace package depending on `@chain/casino-sdk` via `file:../..` and will not build
+from `examples/ledge` alone.
+
+```sh
+npx vercel --prod          # or: npx netlify deploy --prod
+```
+
+Both open CORS on `game.manifest.json`, which the host fetches cross-origin, and neither
+sets a frame-blocking header.
+
+### 4. Hand the address to Chain.wtf
+
+A deployed contract still cannot take a single bet until the Chain.wtf team whitelists it
+on `CasinoGameFacet`; until then `openSession` reverts with
+`CasinoGameFacet__GameNotWhitelisted`. Whitelisting, indexer registration and the catalog
+entry are theirs to do — send them the deployed address and the hosted URL.
+
 ## Layout
 
 | Path | What it is |
