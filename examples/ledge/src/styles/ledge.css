@@ -11,6 +11,9 @@
 .shell {
   display: flex;
   flex-direction: column;
+  /* Filled in from the host's ui.viewport.availableHeight, or window.innerHeight when
+     standalone. Falls back to sizing by content when neither is known. */
+  min-height: var(--app-height, auto);
   background: linear-gradient(180deg, var(--felt) 0%, var(--felt-deep) 420px);
 }
 
@@ -129,7 +132,8 @@
   grid-template-columns: minmax(230px, 270px) minmax(0, 1fr) minmax(280px, 330px);
   gap: var(--space-4);
   padding: var(--space-4) var(--space-6);
-  align-items: start;
+  /* Columns share the full height so the slack is distributed, not left at the bottom. */
+  align-items: stretch;
 }
 
 .layout__left,
@@ -137,8 +141,16 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  position: sticky;
-  top: var(--space-4);
+}
+
+/*
+ * Slack is shared across every panel in a column rather than dumped between them.
+ * space-between left visible voids; stretching one panel made a table's rows drift
+ * halfway down the screen. Each panel simply gets a little taller.
+ */
+.layout__left > .panel,
+.layout__right > .panel {
+  flex: 1 1 auto;
 }
 
 .layout__stage {
@@ -146,6 +158,11 @@
   flex-direction: column;
   gap: var(--space-3);
   min-width: 0;
+}
+
+/* The board is the hero: it takes whatever height the page has spare. */
+.layout__stage .board {
+  flex: 1;
 }
 
 /* --- panels -------------------------------------------------------------- */
@@ -306,6 +323,8 @@
 
 .board {
   position: relative;
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 78%);
@@ -320,7 +339,8 @@
 }
 
 .board__piles {
-  align-items: end;
+  flex: 1;
+  align-items: stretch;
   padding: var(--space-4) var(--space-3) 0;
   background: repeating-linear-gradient(
     90deg,
@@ -333,7 +353,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: var(--space-2);
   padding-bottom: var(--space-2);
 }
@@ -364,12 +384,13 @@
   min-height: 14px;
 }
 
-/* Piles grow upward from the beam, so the stage is bottom-anchored. */
+/* Piles grow upward from the beam, so the stage is bottom-anchored and takes the slack. */
 .lane__stage {
+  flex: 1;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  min-height: 268px;
+  min-height: 210px;
   width: 100%;
 }
 
@@ -954,4 +975,53 @@
   .drop:active:not(:disabled) {
     transform: none;
   }
+}
+
+/* --- fairness ------------------------------------------------------------ */
+
+.fair {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.fair dt {
+  font-size: 11px;
+  color: var(--ink-fade);
+}
+
+.fair dd {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fair__aside {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-fade);
+}
+
+.fair__contract {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  background: var(--recess);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fair__contract a {
+  color: var(--teal);
+  text-decoration: none;
+}
+
+.fair__contract a:hover {
+  text-decoration: underline;
 }

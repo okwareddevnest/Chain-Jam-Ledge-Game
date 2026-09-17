@@ -4,6 +4,7 @@ import { formatUnits, parseUnits } from 'viem';
 
 import { Board } from './components/Board';
 import { BetPanel } from './components/BetPanel';
+import { FairnessPanel } from './components/FairnessPanel';
 import { HistoryStrip } from './components/HistoryStrip';
 import { Hud } from './components/Hud';
 import { LastRound } from './components/LastRound';
@@ -14,6 +15,7 @@ import { LANE_COUNT, N_COINS, PRIZE_MULTIPLIER, maxMultiplierX, maxPayout } from
 import { isMuted, play, setMuted } from './lib/sound';
 import { useCasinoHost } from './lib/useCasinoHost';
 import { useLedgeRound } from './lib/useLedgeRound';
+import { useAvailableHeight } from './lib/useAvailableHeight';
 import { useSessionStats } from './lib/useSessionStats';
 
 const EMPTY_ALLOCATION = [0, 0, 0, 0, 0];
@@ -32,6 +34,7 @@ export function App() {
   const { round, isDemo, demoBalance, decimals, canBet, stuck, drop, dismiss, recoverStuckBet } =
     useLedgeRound(hostApi, snapshot);
   const { stats, observedReturn, record } = useSessionStats();
+  const availableHeight = useAvailableHeight(snapshot?.ui.viewport?.availableHeight);
 
   const [allocation, setAllocation] = useState<number[]>(EMPTY_ALLOCATION);
   const [wagerText, setWagerText] = useState('1');
@@ -214,7 +217,10 @@ export function App() {
     : null;
 
   return (
-    <div className="shell">
+    <div
+      className="shell"
+      style={availableHeight ? ({ '--app-height': `${availableHeight}px` } as React.CSSProperties) : undefined}
+    >
       <Hud
         balance={formatAmount(balance, decimals)}
         symbol={symbol}
@@ -281,6 +287,11 @@ export function App() {
             symbol={symbol}
             onPlayAgain={startNextRound}
             live={round.phase === 'settled' || round.phase === 'error'}
+          />
+          <FairnessPanel
+            chainId={snapshot?.integration.chainId ?? null}
+            gameAddress={snapshot?.integration.gameAddress ?? null}
+            isDemo={isDemo}
           />
         </aside>
       </div>
