@@ -8,3 +8,13 @@ deployed.json
 
 # Local-chain deployment records are throwaway; real networks are committed.
 deployments/31337.json
+
+# /brag output: the video, its captures and its node_modules are large and derived.
+# The plan, brief, share copy and the scripts that regenerate everything are kept.
+brag-output/*
+!brag-output/brag-plan.md
+!brag-output/composition-brief.md
+!brag-output/share-copy.txt
+!brag-output/build-composition.mjs
+!brag-output/render-sfx.mjs
+!brag-output/capture-game.mjs
