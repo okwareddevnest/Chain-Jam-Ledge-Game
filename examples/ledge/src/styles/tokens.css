@@ -1,0 +1,150 @@
+/*
+ * LEDGE design tokens.
+ *
+ * Warm stone neutrals with two accents: gold (the coins themselves) and teal (interactive
+ * affordances). Light by default; the host's `ui.theme` and the OS preference both switch
+ * it. Every pairing below clears 4.5:1 for body text and 3:1 for UI boundaries.
+ */
+:root {
+  --bg: #f5f4f1;
+  --surface: #ffffff;
+  --recess: #e8e5df;
+  --ledge: #ddd8cf;
+  --ledge-face: #c9c2b6;
+  --line: #d6d2ca;
+  --line-strong: #b8b2a8;
+
+  --ink: #1c1a17;
+  --ink-dim: #57534e;
+  --ink-fade: #837d75;
+
+  --gold: #b45309;
+  --gold-bright: #f59e0b;
+  --gold-face: #fcd34d;
+  --gold-edge: #a16207;
+
+  --teal: #0f766e;
+  --teal-soft: #ccfbf1;
+
+  --win: #15803d;
+  --loss: #b91c1c;
+
+  --radius: 10px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --font: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-lane: 200ms;
+
+  --shadow-card: 0 1px 2px rgb(28 26 23 / 0.06), 0 8px 24px rgb(28 26 23 / 0.05);
+  --shadow-coin: 0 1px 1px rgb(120 80 10 / 0.35);
+  --focus: 0 0 0 3px var(--teal-soft), 0 0 0 5px var(--teal);
+}
+
+:root[data-theme='dark'],
+:root:not([data-theme='light']) {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --bg: #171614;
+    --surface: #221f1c;
+    --recess: #12110f;
+    --ledge: #2d2924;
+    --ledge-face: #1d1a16;
+    --line: #35312c;
+    --line-strong: #4b453d;
+
+    --ink: #f5f2ec;
+    --ink-dim: #b5aea4;
+    --ink-fade: #8b847a;
+
+    --gold: #fbbf24;
+    --gold-bright: #f59e0b;
+    --gold-face: #fde68a;
+    --gold-edge: #b45309;
+
+    --teal: #2dd4bf;
+    --teal-soft: #134e4a;
+
+    --win: #4ade80;
+    --loss: #f87171;
+
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.3);
+    --focus: 0 0 0 3px var(--teal-soft), 0 0 0 5px var(--teal);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #171614;
+  --surface: #221f1c;
+  --recess: #12110f;
+  --ledge: #2d2924;
+  --ledge-face: #1d1a16;
+  --line: #35312c;
+  --line-strong: #4b453d;
+
+  --ink: #f5f2ec;
+  --ink-dim: #b5aea4;
+  --ink-fade: #8b847a;
+
+  --gold: #fbbf24;
+  --gold-bright: #f59e0b;
+  --gold-face: #fde68a;
+  --gold-edge: #b45309;
+
+  --teal: #2dd4bf;
+  --teal-soft: #134e4a;
+
+  --win: #4ade80;
+  --loss: #f87171;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-lane: 0ms;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+  border-radius: var(--radius);
+}

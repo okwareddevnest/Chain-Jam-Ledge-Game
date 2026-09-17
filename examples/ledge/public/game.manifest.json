@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "gameId": "LedgeGame",
+  "apiVersion": 1,
+  "defaultLocale": "en",
+  "locales": {
+    "en": {
+      "name": "Ledge",
+      "description": "Five priced piles sit on the ledge. Spread five coins across the lanes and topple what you can."
+    }
+  },
+  "presentation": {
+    "mode": "full-iframe",
+    "hostPanels": {
+      "openSession": false,
+      "history": false,
+      "status": false
+    }
+  },
+  "capabilities": {
+    "openSession": true,
+    "submitAction": false,
+    "forfeitExpiredSession": false,
+    "cancelStuckRandomness": true,
+    "resize": true
+  }
+}
