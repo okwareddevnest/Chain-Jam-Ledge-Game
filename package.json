@@ -1,0 +1,30 @@
+{
+  "name": "@chain/casino-sdk",
+  "version": "0.2.0",
+  "private": true,
+  "workspaces": [
+    "simulator",
+    "local-verify-network",
+    "examples/*"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./host": "./src/host.ts",
+    "./guest": "./src/guest.ts"
+  },
+  "scripts": {
+    "check": "vp check",
+    "check-types": "tsc --noEmit",
+    "start": "concurrently -k -n local-node,simulator,coinflip -c yellow,cyan,magenta \"npm --prefix simulator run local-node\" \"npm --prefix simulator run dev\" \"npm --prefix examples/coinflip-public run dev\""
+  },
+  "dependencies": {
+    "penpal": "^7.0.4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.12.4",
+    "concurrently": "^9.1.2",
+    "typescript": "7.0.2"
+  }
+}

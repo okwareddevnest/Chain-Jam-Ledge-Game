@@ -1,0 +1,70 @@
+/* chain.wtf design tokens — mirrors the deployed coinflip's design system. */
+
+:root {
+  /* === Surfaces === */
+  --color-bg: #0a0a0d;
+  --color-surface: #13131a;
+  --color-recess: #080808;
+
+  /* === CTA === */
+  --color-cta-purple: #9238ff;
+  --color-cta-purple-glow: rgba(146, 56, 255, 0.33);
+  --color-cta-magenta: #cf68ff;
+  --color-cta-yellow: #ffe068;
+
+  /* === Ink === */
+  --color-ink: #ffffff;
+  --color-ink-dim: rgba(255, 255, 255, 0.78);
+  --color-ink-fade: rgba(255, 255, 255, 0.58);
+  --color-ink-ghost: rgba(255, 255, 255, 0.16);
+
+  /* === Status === */
+  --color-win: #08d42f;
+  --color-loss: #ff3838;
+  --color-led-green: #08d42f;
+
+  /* === Typography === */
+  --font-display: 'Poppins', system-ui, -apple-system, sans-serif;
+  --font-display-ui: 'Rubik', system-ui, -apple-system, sans-serif;
+  --font-body: 'Rubik', system-ui, -apple-system, sans-serif;
+
+  /* === Radii === */
+  --radius-card-lg: 24px;
+  --radius-card: 16px;
+  --radius-button: 14px;
+  --radius-button-face: 12px;
+  --radius-chip: 8px;
+
+  /* === Spacing === */
+  --sidebar-width: 300px;
+  --cta-height: 38px;
+
+  /* === Motion === */
+  --duration-hover: 120ms;
+  --duration-cta: 70ms;
+  --duration-toggle: 150ms;
+
+  /* === Card recipe === */
+  --shadow-card-outer: 0 0 0 1px #000;
+  --shadow-card-inner:
+    inset 0 -4px 0 0 rgba(0, 0, 0, 0.24), inset 0 1px 0 0 rgba(255, 255, 255, 0.24);
+  --surface-elevated:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.02) 100%),
+    linear-gradient(180deg, #111 0%, #1e1e1e 100%);
+  --surface-frame:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.46) 0%, rgba(0, 0, 0, 0.46) 100%),
+    linear-gradient(180deg, #111 0%, #1e1e1e 100%);
+  --shadow-frame-outer: 0 1px 0 0 rgba(255, 255, 255, 0.2), 0 22px 12.6px -11px rgba(0, 0, 0, 0.2);
+  --shadow-frame-inner: inset 0 1px 0 0 #000;
+  --shadow-cta-gradient:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1), inset 0 -3px 9px 0 #fff,
+    inset 0 -3px 8px 0 rgba(255, 255, 255, 0.66);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-hover: 0ms;
+    --duration-cta: 0ms;
+    --duration-toggle: 0ms;
+  }
+}

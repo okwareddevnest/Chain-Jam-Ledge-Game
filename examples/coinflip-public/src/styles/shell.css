@@ -1,0 +1,616 @@
+/* Shell layout — the "Front Card" recipe: patterned dark frame, recess main
+ * section with the nebula backdrop, elevated sidebar + canvas cards, bottom bar. */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-ghost) transparent;
+  overflow-x: hidden;
+}
+
+.ck-shell {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  width: 100%;
+  min-height: var(--ck-available-height, 100vh);
+  padding: 8px;
+  gap: 8px;
+  /* Host-page diagonal dot pattern — shows in the 8px gaps around the cards. */
+  background-color: oklch(0.1818 0 0);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4' shape-rendering='crispEdges'><rect x='3' y='0' width='1' height='1' fill='%23ffffff' fill-opacity='0.09'/><rect x='2' y='1' width='1' height='1' fill='%23ffffff' fill-opacity='0.09'/><rect x='1' y='2' width='1' height='1' fill='%23ffffff' fill-opacity='0.09'/><rect x='0' y='3' width='1' height='1' fill='%23ffffff' fill-opacity='0.09'/></svg>");
+  background-size: 8px 8px;
+  background-repeat: repeat;
+  border-radius: var(--radius-card-lg);
+}
+
+.ck-shell__main {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  gap: 12px;
+  overflow: visible;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.56);
+  border-radius: var(--radius-card);
+  background: var(--surface-frame);
+  box-shadow: var(--shadow-frame-outer), var(--shadow-frame-inner);
+}
+
+/* Section-wide backdrop art behind the cards. */
+.ck-shell__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--backdrop-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: var(--radius-card);
+  pointer-events: none;
+}
+
+.ck-shell__sidebar-host,
+.ck-shell__canvas {
+  position: relative;
+  z-index: 1;
+}
+
+.ck-shell__sidebar-host {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ck-shell__canvas {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 560px;
+  background: radial-gradient(ellipse at 50% 30%, rgba(146, 56, 255, 0.06), transparent 60%);
+  border-radius: var(--radius-card);
+  align-items: stretch;
+  justify-items: stretch;
+}
+
+.ck-shell__canvas > *:nth-child(2) {
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+}
+
+/* === Sidebar card === */
+.ck-sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  padding: 24px;
+  gap: 24px;
+  background: var(--surface-elevated);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card-outer), var(--shadow-card-inner);
+  min-height: 360px;
+  overflow: hidden;
+}
+
+.ck-sidebar__scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  padding: 4px 2px;
+  margin: -4px -2px;
+}
+.ck-sidebar__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.ck-sidebar__foot {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ck-sidebar__bet-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ck-sidebar__bet-label {
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  opacity: 0.4;
+}
+
+.ck-sidebar__chips {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.ck-sidebar__fastmode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 39px;
+}
+.ck-sidebar__fastmode-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.04em;
+  color: var(--color-ink);
+}
+.ck-sidebar__fastmode-label svg {
+  width: 32px;
+  height: 32px;
+  color: var(--color-ink);
+}
+
+.ck-sidebar__balance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.42px;
+  color: #fff;
+}
+.ck-sidebar__balance-label {
+  opacity: 0.4;
+}
+.ck-sidebar__balance-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ck-sidebar__balance-amount {
+  opacity: 0.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-sidebar__reason {
+  font-size: 11px;
+  color: var(--color-ink-fade);
+  text-align: center;
+  margin: 4px 0 0;
+}
+
+/* === Canvas bet-history pill rail (overlay mode, like the deployed game) === */
+.ck-canvas-history {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+  padding: 0 16px;
+  min-height: 52px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent 0, #000 32px, #000 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 32px, #000 100%);
+}
+.ck-canvas-history__pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: #2a2a2a;
+  border: 0;
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: -0.03em;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+}
+.ck-canvas-history__pill--win {
+  background: #59ff38;
+  color: rgba(0, 0, 0, 0.86);
+}
+
+/* === Canvas stats strip === */
+.ck-canvas-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 16px;
+  padding: 24px;
+  background: var(--surface-elevated);
+  border-radius: var(--radius-card-lg);
+  box-shadow:
+    var(--shadow-card-outer),
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    var(--shadow-card-inner);
+}
+.ck-canvas-stats__col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.ck-canvas-stats__label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.03em;
+}
+.ck-canvas-stats__label-main,
+.ck-canvas-stats__label-sub {
+  opacity: 0.4;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+.ck-canvas-stats__value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 45px;
+  padding: 2px;
+  background: #080808;
+  border-radius: 14px;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.17));
+}
+.ck-canvas-stats__value-inner {
+  display: inline-flex;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  border-radius: 12px;
+  color: var(--color-ink);
+}
+.ck-canvas-stats__value-text {
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.04em;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+.ck-canvas-stats__value-suffix {
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+/* === Bottom bar === */
+.ck-bottombar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 96px;
+  padding: 24px;
+  background: var(--surface-elevated);
+  border-radius: var(--radius-card-lg);
+  box-shadow:
+    var(--shadow-card-outer),
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    var(--shadow-card-inner);
+}
+.ck-bottombar__left,
+.ck-bottombar__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-fade);
+}
+.ck-bottombar__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.ck-bottombar__logo {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.05em;
+  color: var(--color-ink);
+}
+.ck-fairness-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-led-green);
+  box-shadow: 0 0 4px var(--color-led-green);
+}
+
+/* === Win celebration overlay === */
+.ck-win-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.ck-win-overlay__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 220px;
+  padding: 24px;
+  background: var(--surface-elevated);
+  border-radius: var(--radius-card-lg);
+  box-shadow:
+    var(--shadow-card-outer),
+    var(--shadow-card-inner),
+    0 16px 40px rgba(0, 0, 0, 0.55);
+  animation: ck-win-pop 0.25s ease-out both;
+}
+@keyframes ck-win-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.ck-win-overlay__info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.ck-win-overlay__headline {
+  position: relative;
+  display: inline-block;
+}
+.ck-win-overlay__win,
+.ck-win-overlay__mult {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: -0.07em;
+  white-space: nowrap;
+}
+.ck-win-overlay__win {
+  font-size: 56px;
+  line-height: 56px;
+  text-transform: uppercase;
+  color: var(--color-win);
+}
+.ck-win-overlay__mult {
+  font-size: 48px;
+  line-height: 48px;
+  text-transform: lowercase;
+  color: var(--color-ink);
+  margin-top: -23px;
+  margin-left: 68px;
+}
+.ck-win-overlay__payout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ck-win-overlay__amount {
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: -0.04em;
+  color: var(--color-ink);
+}
+.ck-win-overlay__label {
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.03em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--color-ink-fade);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ck-win-overlay__card {
+    animation: none;
+  }
+}
+
+/* === Connecting overlay === */
+.ck-canvas-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+}
+.ck-canvas-loading__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-width: 160px;
+  padding: 28px 36px;
+  background: var(--surface-elevated);
+  border-radius: 20px;
+  box-shadow:
+    var(--shadow-card-outer),
+    var(--shadow-card-inner),
+    0 16px 40px rgba(0, 0, 0, 0.55);
+}
+.ck-canvas-loading__spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid var(--color-ink-ghost);
+  border-top-color: var(--color-cta-magenta);
+  animation: ck-canvas-loading-spin 1.2s linear infinite;
+}
+.ck-canvas-loading__label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-fade);
+}
+@keyframes ck-canvas-loading-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* === Mobile (single scrolling column) === */
+@media (max-width: 767px) {
+  .ck-shell {
+    padding: 0;
+    border-radius: 0;
+    background-image: none;
+  }
+  .ck-shell__main {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .ck-shell__backdrop {
+    background-image: var(--backdrop-mobile-image, var(--backdrop-image));
+    background-position: 85% 30%;
+  }
+  .ck-shell__canvas {
+    order: 1;
+    flex: 0 0 auto;
+    min-height: 420px;
+    max-height: 560px;
+  }
+  .ck-shell__sidebar-host {
+    order: 2;
+    display: flex;
+    flex: 0 0 auto;
+    margin: 0 -12px -12px -12px;
+  }
+  .ck-sidebar {
+    flex: 0 0 auto;
+    min-height: auto;
+    overflow: visible;
+    border-radius: var(--radius-card-lg);
+    margin-top: 12px;
+  }
+  .ck-sidebar__scroll {
+    flex: 0 0 auto;
+    min-height: 0;
+    overflow: visible;
+    padding: 0;
+    margin: 0;
+    order: -2;
+  }
+  .ck-sidebar__foot--cta {
+    order: -3;
+  }
+  .ck-sidebar__foot--fastmode {
+    order: -1;
+  }
+  .ck-canvas-stats {
+    gap: 12px;
+    padding: 14px;
+    margin-inline: 12px;
+    margin-bottom: 12px;
+  }
+  .ck-canvas-stats__label {
+    font-size: 12px;
+    gap: 8px;
+  }
+  .ck-canvas-stats__value {
+    height: 38px;
+  }
+  .ck-canvas-stats__value-text {
+    font-size: 13px;
+  }
+  .ck-bottombar {
+    height: 72px;
+    padding: 12px;
+  }
+  .ck-bottombar__logo {
+    font-size: 18px;
+  }
+  .ck-win-overlay__card {
+    min-width: 180px;
+    padding: 20px;
+  }
+  .ck-win-overlay__win {
+    font-size: 44px;
+    line-height: 44px;
+  }
+  .ck-win-overlay__mult {
+    font-size: 38px;
+    line-height: 38px;
+    margin-top: -18px;
+    margin-left: 53px;
+  }
+}

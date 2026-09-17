@@ -1,0 +1,28 @@
+{
+  "name": "coinflip-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3100",
+    "build": "vite build",
+    "preview": "vite preview --port 3100",
+    "test": "vitest run --passWithNoTests",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chain/casino-sdk": "file:../..",
+    "@fontsource/poppins": "^5.2.7",
+    "@fontsource/rubik": "^5.2.8",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "viem": "^2.52.2"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0",
+    "vitest": "^3.2.4"
+  }
+}

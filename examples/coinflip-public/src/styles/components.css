@@ -1,0 +1,377 @@
+/* UI-kit component recipes — ToggleTab, quick chips, BetAmountInput, Slider,
+ * ToggleSwitch, gradient CTA, currency icon. */
+
+/* === ToggleTab (Manual / Auto) === */
+.ck-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  background: var(--color-recess);
+  border-radius: 16px;
+  padding: 2px;
+  gap: 2px;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.17));
+}
+.ck-toggle__tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.04em;
+  line-height: 16px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition:
+    background var(--duration-toggle) ease,
+    box-shadow var(--duration-toggle) ease;
+}
+.ck-toggle__tab[aria-pressed='true'] {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(153, 153, 153, 0.14) 100%);
+  box-shadow:
+    inset 0 5px 6.6px 0 rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+}
+.ck-toggle__tab:not([aria-pressed='true']):not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.ck-toggle__tab:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.ck-toggle__led {
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  margin-left: -10px;
+  pointer-events: none;
+}
+.ck-toggle__label {
+  position: relative;
+  z-index: 1;
+}
+
+/* === Quick chips (1/4, 1/2, 2x, Max) === */
+.ck-chip {
+  flex: 1 0 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 10px;
+  background: #2a2a2a;
+  border: 0;
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius-button);
+  font-family: var(--font-display-ui);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  cursor: pointer;
+  transition:
+    opacity var(--duration-hover) ease,
+    background-color var(--duration-hover) ease;
+}
+.ck-chip:hover:not(:disabled) {
+  background: #353535;
+}
+.ck-chip:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* === BetAmountInput === */
+.ck-bet {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: 48px;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-chip);
+  color: var(--color-ink);
+  font-family: var(--font-display-ui);
+  transition:
+    border-color var(--duration-hover) ease,
+    box-shadow var(--duration-hover) ease;
+}
+.ck-bet:focus-within {
+  border-color: var(--color-cta-purple);
+  box-shadow: 0 0 0 2px var(--color-cta-purple-glow);
+}
+.ck-bet__leading {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.ck-bet__input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
+  padding: 0 4px;
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 17px;
+  letter-spacing: -0.03em;
+  text-align: left;
+  color: var(--color-ink-dim);
+}
+.ck-bet:has(.ck-bet__input:disabled) {
+  opacity: 0.5;
+}
+
+/* === Slider === */
+.ck-slider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 45px;
+  background: #080808;
+  border-radius: var(--radius-button);
+  padding: 0 10px;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.17));
+  cursor: pointer;
+}
+.ck-slider__track {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 50%;
+  height: 3px;
+  background: #999999;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.ck-slider__pill {
+  position: absolute;
+  top: 50%;
+  left: calc(14px + (100% - 28px) * var(--ck-slider-pct, 0%) / 100% - 12px);
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 30px;
+  padding: 0 8px;
+  background: #1e1e1e;
+  color: var(--color-ink);
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  border-radius: var(--radius-button);
+  box-shadow:
+    inset 0 5px 6.6px 0 rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  transition: left var(--duration-toggle) ease;
+}
+.ck-slider__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.ck-slider__input:focus-visible + .ck-slider__pill,
+.ck-slider__input:focus + .ck-slider__pill {
+  box-shadow:
+    inset 0 5px 6.6px 0 rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
+    0 0 0 2px var(--color-cta-purple-glow);
+}
+.ck-slider--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ck-slider--disabled .ck-slider__input {
+  cursor: not-allowed;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ck-slider__pill {
+    transition: none;
+  }
+}
+
+/* === ToggleSwitch === */
+.ck-switch {
+  position: relative;
+  display: inline-block;
+  width: 73px;
+  height: 39px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  overflow: visible;
+  transition:
+    opacity var(--duration-hover) ease,
+    filter var(--duration-hover) ease;
+}
+.ck-switch:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.ck-switch:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.ck-switch:focus-visible {
+  outline: 2px solid var(--color-cta-purple-glow);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.ck-switch__svg {
+  position: absolute;
+  top: 0;
+  left: -2.3px;
+  width: 78px;
+  height: 56px;
+  pointer-events: none;
+}
+
+/* === CtaButton — gradient magenta BET === */
+.ck-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  cursor: pointer;
+  background: transparent;
+  padding: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  transition:
+    transform var(--duration-cta) ease,
+    opacity var(--duration-hover) ease;
+}
+.ck-cta__shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: #080808;
+  border-radius: var(--radius-button);
+  padding: 2px 2px 3px;
+  box-shadow: inset 0 -1px 0 0 rgba(255, 255, 255, 0.17);
+  z-index: 1;
+}
+.ck-cta__face {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: var(--cta-height);
+  background: linear-gradient(180deg, var(--color-cta-magenta) 0%, var(--color-cta-magenta) 100%);
+  color: #000;
+  border-radius: var(--radius-button-face);
+  padding: 0 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow-cta-gradient);
+  transition:
+    background var(--duration-toggle) ease,
+    box-shadow var(--duration-toggle) ease;
+}
+.ck-cta__inner-glow {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 50%;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  filter: blur(8px);
+  mix-blend-mode: plus-lighter;
+  pointer-events: none;
+  transform: translateY(calc(-50% + 18px));
+}
+.ck-cta__label {
+  position: relative;
+  z-index: 1;
+}
+.ck-cta__streak {
+  position: absolute;
+  left: -6.59%;
+  right: -6.59%;
+  bottom: -11px;
+  height: 48px;
+  background: var(--color-cta-magenta);
+  border-radius: 50%;
+  opacity: 0.2;
+  filter: blur(8.3px);
+  pointer-events: none;
+  z-index: 0;
+}
+.ck-cta:hover:not(:disabled) .ck-cta__face {
+  background: linear-gradient(180deg, #e08bff 0%, #d574ff 100%);
+  box-shadow:
+    var(--shadow-cta-gradient),
+    0 6px 18px -6px var(--color-cta-purple-glow);
+}
+.ck-cta:hover:not(:disabled) .ck-cta__inner-glow {
+  background: rgba(255, 255, 255, 0.45);
+}
+.ck-cta:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.ck-cta:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ck-cta__streak,
+  .ck-cta__inner-glow {
+    filter: none;
+  }
+}
+
+/* === Currency icon fallback disc === */
+.ck-currency {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, #ffe9ad, #f5c04a 55%, #b8862b);
+  color: #201500;
+  font-family: var(--font-display);
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.ck-currency img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+}

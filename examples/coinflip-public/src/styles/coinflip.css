@@ -1,0 +1,360 @@
+/* Coinflip-specific styles — sidebar controls + the coin scene. */
+
+/* === Heads / Tails pick pills === */
+.cf-pick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+.cf-pick__pill {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  height: 45px;
+  padding: 2px;
+  margin: 0;
+  background: #080808;
+  border: 0;
+  border-radius: 14px;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.17));
+  cursor: pointer;
+  transition: opacity var(--duration-hover) ease;
+}
+.cf-pick__pill:not(.cf-pick__pill--active):hover:not(:disabled) .cf-pick__face {
+  background: linear-gradient(180deg, #2a2a2a 0%, #1d1d1d 100%);
+}
+.cf-pick__pill--active:hover:not(:disabled) .cf-pick__face {
+  background: linear-gradient(180deg, #3a3a3a 0%, #1d1d1d 100%);
+}
+.cf-pick__pill:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+.cf-pick__face {
+  position: relative;
+  display: inline-flex;
+  flex: 1 0 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 24px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #1d1d1d 0%, #181818 100%);
+  box-shadow:
+    inset 0 5px 6.6px 0 rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  color: var(--color-ink);
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.04em;
+  line-height: 16px;
+  white-space: nowrap;
+  transition: background var(--duration-hover) ease;
+}
+.cf-pick__pill--active .cf-pick__face {
+  background: linear-gradient(180deg, #313131 0%, #181818 100%);
+  box-shadow:
+    inset 0 5px 6.6px 0 rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+}
+.cf-pick__pill:focus-visible {
+  outline: none;
+}
+.cf-pick__pill:focus-visible .cf-pick__face {
+  box-shadow:
+    inset 0 5px 6.6px 0 rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
+    0 0 0 2px var(--color-cta-purple-glow);
+}
+.cf-pick__icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+/* === Slider rows === */
+.cf-slider-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+.cf-slider-row__label {
+  font-family: var(--font-display-ui);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  opacity: 0.4;
+}
+
+/* === Coin scene === */
+.cf-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.cf-coin-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cf-cols, 1), auto);
+  justify-content: center;
+  align-content: center;
+  gap: calc(var(--cf-coin-size, 120px) * 0.28);
+  padding-bottom: 72px;
+}
+
+.cf-coin {
+  width: var(--cf-coin-size, 120px);
+  height: var(--cf-coin-size, 120px);
+  perspective: 700px;
+  animation: cf-bob 3.2s ease-in-out infinite;
+  animation-delay: var(--cf-bob-delay, 0s);
+}
+@keyframes cf-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(calc(var(--cf-coin-size, 120px) * -0.06));
+  }
+}
+
+.cf-coin__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+.cf-coin__face {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.cf-coin__face--back {
+  transform: rotateX(180deg);
+}
+
+/* Waiting for randomness — continuous end-over-end spin. */
+.cf-coin--spinning .cf-coin__inner {
+  animation: cf-spin 0.55s linear infinite;
+  animation-delay: var(--cf-flip-delay, 0s);
+}
+@keyframes cf-spin {
+  from {
+    transform: rotateX(0deg);
+  }
+  to {
+    transform: rotateX(-360deg);
+  }
+}
+
+/* Landing — a toss with a bounce that ends on the settled face. The heads
+ * variant ends at a full turn, tails at a half turn past it, so the parity
+ * always matches the on-chain result. */
+.cf-coin--landing {
+  animation: cf-toss 1.35s cubic-bezier(0.3, 0.6, 0.6, 1) both;
+  animation-delay: var(--cf-flip-delay, 0s);
+}
+@keyframes cf-toss {
+  0% {
+    transform: translateY(0);
+  }
+  34% {
+    transform: translateY(calc(var(--cf-coin-size, 120px) * -0.85));
+  }
+  62% {
+    transform: translateY(0);
+  }
+  78% {
+    transform: translateY(calc(var(--cf-coin-size, 120px) * -0.22));
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+.cf-coin--landing.cf-coin--lands-heads .cf-coin__inner {
+  animation: cf-land-heads 1.35s cubic-bezier(0.35, 0.75, 0.5, 1) both;
+  animation-delay: var(--cf-flip-delay, 0s);
+}
+.cf-coin--landing.cf-coin--lands-tails .cf-coin__inner {
+  animation: cf-land-tails 1.35s cubic-bezier(0.35, 0.75, 0.5, 1) both;
+  animation-delay: var(--cf-flip-delay, 0s);
+}
+@keyframes cf-land-heads {
+  from {
+    transform: rotateX(-1800deg);
+  }
+  to {
+    transform: rotateX(0deg);
+  }
+}
+@keyframes cf-land-tails {
+  from {
+    transform: rotateX(-1980deg);
+  }
+  to {
+    transform: rotateX(-180deg);
+  }
+}
+
+/* Settled — hold the landed face still (no bob restart jump). */
+.cf-coin--settled {
+  animation: none;
+}
+.cf-coin--settled.cf-coin--lands-tails .cf-coin__inner {
+  transform: rotateX(-180deg);
+}
+
+/* Per-coin hit/miss glow once the round is revealed. */
+.cf-coin--match {
+  filter: drop-shadow(0 0 6px var(--color-win)) drop-shadow(0 0 14px rgba(8, 212, 47, 0.4));
+}
+.cf-coin--miss {
+  filter: drop-shadow(0 0 6px var(--color-loss)) drop-shadow(0 0 14px rgba(255, 56, 56, 0.4));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-coin,
+  .cf-coin--spinning .cf-coin__inner,
+  .cf-coin--landing,
+  .cf-coin--landing .cf-coin__inner {
+    animation: none;
+  }
+}
+
+/* === Bet-shape summary pill (idle) === */
+.cf-summary {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-dim);
+  background: var(--color-recess);
+  border: 1px solid var(--color-ink-ghost);
+  padding: 6px 12px;
+  border-radius: 999px;
+  z-index: 1;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* === Status / result pills — the #0f0f0f dot-grid capsule === */
+.cf-status,
+.cf-result__detail {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 99px;
+  background-color: #0f0f0f;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0.9px, transparent 1px);
+  background-size: 3.3px 3.3px;
+  border-top: 1px solid #080808;
+  box-shadow: 0 1px 0 #292929;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: -0.48px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  z-index: 1;
+  pointer-events: none;
+}
+.cf-status {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  animation: cf-status-pulse 1.2s ease-in-out infinite;
+}
+@keyframes cf-status-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.cf-result__detail {
+  text-transform: capitalize;
+}
+
+/* === Settled per-coin badge row at the canvas bottom === */
+.cf-result {
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  pointer-events: none;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.cf-result__coins {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(4px, 4vw, 37px);
+  width: 100%;
+  padding: 0 16px;
+  margin-top: 2px;
+}
+.cf-coin-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 48px;
+  aspect-ratio: 1;
+  min-width: 0;
+}
+.cf-coin-badge__coin {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+}
+.cf-coin-badge--match .cf-coin-badge__coin {
+  filter: drop-shadow(0 0 3px var(--color-win)) drop-shadow(0 0 6px rgba(8, 212, 47, 0.4));
+}
+.cf-coin-badge--miss .cf-coin-badge__coin {
+  filter: drop-shadow(0 0 3px var(--color-loss)) drop-shadow(0 0 6px rgba(255, 56, 56, 0.4));
+}
+
+@media (max-width: 767px) {
+  .cf-result {
+    display: none;
+  }
+  .cf-summary {
+    top: 56px;
+  }
+  .cf-coin-grid {
+    padding-bottom: 32px;
+  }
+}

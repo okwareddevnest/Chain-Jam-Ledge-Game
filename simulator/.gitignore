@@ -1,0 +1,4 @@
+node_modules/
+dist/
+local-node/deployed.json
+bun.lock

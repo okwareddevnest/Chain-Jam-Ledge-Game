@@ -1,0 +1,36 @@
+{
+  "name": "casino-sdk-simulator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3300",
+    "build": "vite build",
+    "preview": "vite preview --port 3300",
+    "local-node": "tsx local-node/index.ts",
+    "postinstall": "node scripts/fix-hardhat-zod.mjs",
+    "compile-contracts": "node scripts/compile-contracts.mjs",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
+    "penpal": "^7.0.4",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "viem": "^2.52.2",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^24.12.4",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "hardhat": "^3.12.0",
+    "solc": "^0.8.30",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0"
+  }
+}
