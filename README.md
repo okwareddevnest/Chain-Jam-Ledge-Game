@@ -1,53 +1,74 @@
-# `@chain/casino-sdk`
+# LEDGE
 
-Bridge SDK + on-chain interface for building **casino games** (single player vs. the house
-liquidity pool) that embed inside the Chain.wtf host application as sandboxed iframes.
+**Chain Jam Vol. 1 entry.** Five priced piles sit on a ledge. You get five coins. Spread
+them across the lanes and topple what you can.
 
-This package is the monorepo home of what was previously vendored as `@chain-protocol/games-sdk`.
+Bigger pile, bigger prize, harder to shift. Every coin is worth exactly the same expected
+return wherever you drop it — the lane only chooses your volatility.
 
-## Usage
+```
+┌────┬────┬────┬────┬────┐
+│ ▪▪ │ ▪▪▪│ ███│████│▓▓▓▓│   the piles are the paytable
+│ 1x │ 2x │ 5x │ 15x│ 50x│
+├────┼────┼────┼────┼────┤
+│ ●● │ ●  │ ●● │    │    │   your five coins
+└────┴────┴────┴────┴────┘
+         [ D R O P ]
+```
 
-- **Guest (iframe)**: import from `@chain/casino-sdk/guest` — `connectGameToHost`, types.
-- **Host (parent app)**: import from `@chain/casino-sdk/host` — `connectHostToGame`.
-- **Types + manifest**: import from `@chain/casino-sdk` — `validateCasinoGameManifest`,
-  `canonicalCasinoGameId`, `resolveManifestMetadata`, and all shared types.
+- **Declared theoretical RTP: 96.00%**, identical across all 126 possible allocations
+- **Max multiplier 50x** on one lane, 73x across a full spread
+- One transaction, one VRF request, instant settle
+- Runs standalone outside the host iframe as a playable demo
 
-## Layout
+## Where things are
 
-| Path                                          | What it is                                                                                                                                                                                                                                                                           |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `src/types.ts`                                | `HostSnapshotV1`, `HostApiV1`, `GuestApiV1`, manifest types.                                                                                                                                                                                                                         |
-| `src/manifest.ts`                             | Manifest validation + `gameId` canonicalization.                                                                                                                                                                                                                                     |
-| `src/host.ts` / `src/guest.ts`                | Penpal `postMessage` connectors.                                                                                                                                                                                                                                                     |
-| `simulator/contracts/ICasinoGameV2.sol`       | Canonical on-chain game interface.                                                                                                                                                                                                                                                   |
-| `examples/coinflip-public/game.manifest.json` | Example `game.manifest.json` the host validates.                                                                                                                                                                                                                                     |
-| `docs/`                                       | Full integration guide, contract constraints, slots risk/reserves, visual/UX notes.                                                                                                                                                                                                  |
-| `docs/CHANGELOG.md`                           | Date-versioned SDK release notes.                                                                                                                                                                                                                                                    |
-| `docs/RANDOMNESS_DICE.md`                     | **Agents:** unbiased d6 from `bytes32` RNG (rejection sampling; never raw `byte % 6`).                                                                                                                                                                                               |
-| `local-verify-network/`                       | Local Verify Network VRF simulator (real router + fulfilling node) for testing games against a local chain. In-repo it is a gitignored mirror of `tools/local-verify-network` — edit the tool, not the copy.                                                                         |
-| `simulator/`                                  | Standalone local test setup: a Vite harness replicating the Chain.wtf host frame (optimistic sessions, flashblock push + lagged indexed feed, balance ledger) plus a one-command local backend (in-memory Hardhat node + minimal casino host + VRF node). See `simulator/README.md`. |
+| Path | What it is |
+| ---- | ---------- |
+| [`examples/ledge/`](./examples/ledge) | The game — frontend, math, tests |
+| [`examples/ledge/DESIGN.md`](./examples/ledge/DESIGN.md) | The math, derived, and why the design is what it is |
+| [`examples/ledge/README.md`](./examples/ledge/README.md) | Run it, deploy it, host it |
+| [`simulator/contracts/LedgeGame.sol`](./simulator/contracts/LedgeGame.sol) | The game contract (`ICasinoGameV2`) |
+| [`scripts/deploy-ledge.ts`](./scripts/deploy-ledge.ts) | Deploys to Base; dry run by default |
 
-## Local testing
-
-This package is an npm workspace. One install covers the simulator, the local VRF node and the
-example game; one command runs the whole local stack (chain + VRF node + casino deployment +
-simulator harness + example game):
+## Quick start
 
 ```sh
 npm install
-npm start
+npm start          # local chain + VRF + simulator (:3300) + the game (:3101)
 ```
 
-See [`simulator/README.md`](./simulator/README.md).
+Open <http://localhost:3300>, expand the setup panel, set **Game contract** to `LedgeGame`,
+then **Restart harness**. Or open <http://localhost:3101> directly for the standalone demo.
 
-Start with [`docs/CHAIN_WTF_CASINO_GAMES.md`](./docs/CHAIN_WTF_CASINO_GAMES.md).
-See [`docs/CHANGELOG.md`](./docs/CHANGELOG.md) for date-versioned SDK changes.
+```sh
+npm --prefix examples/ledge test    # 64 tests
+```
 
-## Dependency
+The suite includes a parity proof that runs the deployed contract against the TypeScript
+mirror over all 126 allocations and 150 random seeds, so the animation can never show one
+result while the chain pays another.
 
-- **`penpal`** `^7.0.4` — promise-based `postMessage` RPC.
+## Deploying
 
-## Distribution
+See [examples/ledge/README.md](./examples/ledge/README.md#deploying-for-real). Short version:
 
-The TypeScript sources are also published through the `@chain/ui` shadcn registry, so external game
-developers can install them with `shadcn add @chain/casino-sdk` (see `packages/ui`).
+```sh
+cp .env.example .env.deploy        # fill in RPC + deployer key
+set -a; . ./.env.deploy; set +a
+npm run deploy:ledge                        # dry run — sends nothing
+LEDGE_CONFIRM=84532 npm run deploy:ledge    # broadcast to Base Sepolia
+```
+
+A deployed contract cannot take a bet until the Chain.wtf team whitelists it on
+`CasinoGameFacet`. That is theirs to do; send them the address and the hosted URL.
+
+## What is mine and what is vendored
+
+Everything under `examples/ledge/`, `simulator/contracts/LedgeGame.sol`, `scripts/`, and the
+hosting config at the root is this entry's own work.
+
+The rest of the tree is the **Chain casino SDK v0.2.0**, vendored unmodified as the build
+baseline — `src/`, `simulator/` (except `LedgeGame.sol`), `local-verify-network/`, `docs/`,
+and `examples/coinflip-public/`. Its own README is kept at
+[`docs/SDK_README.md`](./docs/SDK_README.md). Licensing of that code is Chain.wtf's.

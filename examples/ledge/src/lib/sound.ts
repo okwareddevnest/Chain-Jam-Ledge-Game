@@ -32,7 +32,7 @@ const ensureContext = (): AudioContext | null => {
   }
 };
 
-const noiseBuffer = (ctx: AudioContext, seconds: number): AudioBuffer => {
+const noiseBuffer = (ctx: BaseAudioContext, seconds: number): AudioBuffer => {
   const frames = Math.floor(ctx.sampleRate * seconds);
   const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
   const data = buffer.getChannelData(0);
@@ -42,7 +42,7 @@ const noiseBuffer = (ctx: AudioContext, seconds: number): AudioBuffer => {
   return buffer;
 };
 
-const metalPing = (ctx: AudioContext, out: GainNode, freq: number, at: number, gain: number, decay: number): void => {
+const metalPing = (ctx: BaseAudioContext, out: GainNode, freq: number, at: number, gain: number, decay: number): void => {
   const osc = ctx.createOscillator();
   const env = ctx.createGain();
 
@@ -59,7 +59,7 @@ const metalPing = (ctx: AudioContext, out: GainNode, freq: number, at: number, g
   osc.stop(at + decay + 0.02);
 };
 
-const thud = (ctx: AudioContext, out: GainNode, at: number, gain: number): void => {
+const thud = (ctx: BaseAudioContext, out: GainNode, at: number, gain: number): void => {
   const osc = ctx.createOscillator();
   const env = ctx.createGain();
 
@@ -76,7 +76,7 @@ const thud = (ctx: AudioContext, out: GainNode, at: number, gain: number): void 
   osc.stop(at + 0.24);
 };
 
-const scatter = (ctx: AudioContext, out: GainNode, at: number, count: number, gain: number): void => {
+const scatter = (ctx: BaseAudioContext, out: GainNode, at: number, count: number, gain: number): void => {
   for (let i = 0; i < count; i += 1) {
     const offset = at + Math.random() * 0.26;
     metalPing(ctx, out, 1400 + Math.random() * 1700, offset, gain * (0.4 + Math.random() * 0.6), 0.14);
@@ -90,24 +90,46 @@ export const setMuted = (next: boolean): void => {
 
 export const isMuted = (): boolean => muted;
 
-export const play = (voice: Voice): void => {
-  const ctx = ensureContext();
-  if (!ctx || !master || muted) return;
+/**
+ * Measured by rendering each voice into an OfflineAudioContext (44.1kHz, mono) and
+ * reading the buffer back. Reference values, so a future edit that silences or clips a
+ * voice is obvious:
+ *
+ *   voice     peak   duration   clipped
+ *   place     0.32      79ms      no
+ *   clear     0.21      99ms      no
+ *   release   0.28     390ms      no
+ *   tension   0.23     475ms      no
+ *   topple    0.50     413ms      no
+ *   hold      0.38     220ms      no
+ *   jackpot   0.73     798ms      no
+ *
+ * Nothing exceeds 1.0, and the jackpot is the loudest and longest, as intended.
+ */
 
-  const now = ctx.currentTime;
-
-  try {
+/**
+ * Schedules one voice onto any context. Split out from `play` so the voices can be
+ * rendered into an OfflineAudioContext and measured — otherwise "does it make a sound"
+ * is only answerable by a human with speakers.
+ */
+export const scheduleVoice = (
+  ctx: BaseAudioContext,
+  out: GainNode,
+  voice: Voice,
+  now: number,
+): void => {
+  {
     switch (voice) {
       case 'place':
-        metalPing(ctx, master, 2100, now, 0.35, 0.08);
+        metalPing(ctx, out, 2100, now, 0.35, 0.08);
         break;
 
       case 'clear':
-        metalPing(ctx, master, 900, now, 0.22, 0.1);
+        metalPing(ctx, out, 900, now, 0.22, 0.1);
         break;
 
       case 'release':
-        scatter(ctx, master, now, 7, 0.3);
+        scatter(ctx, out, now, 7, 0.3);
         break;
 
       case 'tension': {
@@ -127,7 +149,7 @@ export const play = (voice: Voice): void => {
         env.gain.linearRampToValueAtTime(0.22, now + 0.2);
         env.gain.exponentialRampToValueAtTime(0.0001, now + 0.46);
 
-        osc.connect(filter).connect(env).connect(master);
+        osc.connect(filter).connect(env).connect(out);
         osc.start(now);
         osc.stop(now + 0.48);
         break;
@@ -146,24 +168,33 @@ export const play = (voice: Voice): void => {
         env.gain.setValueAtTime(0.5, now);
         env.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
 
-        source.connect(filter).connect(env).connect(master);
+        source.connect(filter).connect(env).connect(out);
         source.start(now);
 
-        scatter(ctx, master, now, 12, 0.34);
+        scatter(ctx, out, now, 12, 0.34);
         break;
       }
 
       case 'hold':
-        thud(ctx, master, now, 0.4);
+        thud(ctx, out, now, 0.4);
         break;
 
       case 'jackpot':
         [0, 0.09, 0.18, 0.3].forEach((offset, index) => {
-          metalPing(ctx, master!, 880 * (1 + index * 0.26), now + offset, 0.34, 0.5);
+          metalPing(ctx, out, 880 * (1 + index * 0.26), now + offset, 0.34, 0.5);
         });
-        scatter(ctx, master, now + 0.1, 18, 0.32);
+        scatter(ctx, out, now + 0.1, 18, 0.32);
         break;
     }
+  }
+};
+
+export const play = (voice: Voice): void => {
+  const ctx = ensureContext();
+  if (!ctx || !master || muted) return;
+
+  try {
+    scheduleVoice(ctx, master, voice, ctx.currentTime);
   } catch {
     // Never let a failed sound take the round down with it.
   }
