@@ -10,7 +10,9 @@ import {
   RTP_DENOMINATOR,
   RTP_NUMERATOR,
   TOPPLE_BASE,
+  PRESETS,
   allAllocations,
+  anyWinProbability,
   decodeGameData,
   decodeGameState,
   encodeGameData,
@@ -24,6 +26,7 @@ import {
   toppleProbability,
   toppleThreshold,
   topOutcomeProbabilityWad,
+  volatilityOf,
 } from './ledge';
 
 const SPREAD = [1, 1, 1, 1, 1];
@@ -262,5 +265,41 @@ describe('resolution', () => {
 
     expect(observedRtp).toBeGreaterThan(0.85);
     expect(observedRtp).toBeLessThan(1.07);
+  });
+});
+
+describe('risk read-outs', () => {
+  it('reports the chance of winning anything, not just the top outcome', () => {
+    // All five on the 1x lane: a single lane at 96%.
+    expect(anyWinProbability([5, 0, 0, 0, 0])).toBeCloseTo(0.96, 10);
+
+    // Spread: 1 - product of every lane holding.
+    const spread = 1 - 0.808 * 0.904 * 0.9616 * 0.9872 * 0.99616;
+    expect(anyWinProbability([1, 1, 1, 1, 1])).toBeCloseTo(spread, 10);
+  });
+
+  it('gives no win chance to an allocation that used no lanes', () => {
+    expect(anyWinProbability([0, 0, 0, 0, 0])).toBe(0);
+  });
+
+  it('scores the all-in spread as the most volatile and the 1x lane as the least', () => {
+    expect(volatilityOf([0, 0, 0, 0, 5])).toBeCloseTo(1, 10);
+    expect(volatilityOf([5, 0, 0, 0, 0])).toBeLessThan(0.05);
+    expect(volatilityOf([1, 1, 1, 1, 1])).toBeGreaterThan(volatilityOf([5, 0, 0, 0, 0]));
+  });
+
+  it('keeps volatility inside 0..1 for every allocation', () => {
+    for (const allocation of allAllocations()) {
+      const v = volatilityOf(allocation);
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('ships presets that are all legal five-coin spreads', () => {
+    expect(PRESETS.length).toBeGreaterThan(0);
+    for (const preset of PRESETS) {
+      expect(isValidAllocation(preset.allocation)).toBe(true);
+    }
   });
 });

@@ -226,3 +226,59 @@ export const resolve = (allocation: readonly number[], randomness: HexString): L
 
   return { toppled, payoutMultiplier };
 };
+
+/** Chance the round pays anything at all: one minus every used lane holding. */
+export const anyWinProbability = (allocation: readonly number[]): number => {
+  let nothing = 1;
+
+  allocation.forEach((coins, lane) => {
+    if (coins === 0) return;
+    nothing *= 1 - toppleProbability(lane, coins);
+  });
+
+  return 1 - nothing;
+};
+
+/** Standard deviation of the payout multiplier. Lanes resolve independently. */
+export const payoutDeviation = (allocation: readonly number[]): number => {
+  let variance = 0;
+
+  allocation.forEach((coins, lane) => {
+    if (coins === 0) return;
+    const q = toppleProbability(lane, coins);
+    const prize = Number(PRIZE_MULTIPLIER[lane]);
+    variance += prize * prize * q * (1 - q);
+  });
+
+  return Math.sqrt(variance);
+};
+
+/**
+ * Deviation of the spikiest allocation there is — everything on the top lane. Used to
+ * scale the risk read-out so it always lands in 0..1.
+ */
+const MAX_DEVIATION = payoutDeviation([0, 0, 0, 0, N_COINS]);
+
+/** 0 = steadiest spread available, 1 = the spikiest. */
+export const volatilityOf = (allocation: readonly number[]): number => {
+  if (MAX_DEVIATION === 0) return 0;
+  return Math.min(payoutDeviation(allocation) / MAX_DEVIATION, 1);
+};
+
+export type Preset = {
+  id: string;
+  label: string;
+  hint: string;
+  allocation: number[];
+};
+
+/**
+ * One-tap spreads. Every one of these still returns 96% — they only trade how often you
+ * win against how much you win when you do.
+ */
+export const PRESETS: readonly Preset[] = [
+  { id: 'spread', label: 'Spread', hint: 'one coin on every pile', allocation: [1, 1, 1, 1, 1] },
+  { id: 'safe', label: 'Steady', hint: 'all five on the 1x', allocation: [5, 0, 0, 0, 0] },
+  { id: 'ladder', label: 'Ladder', hint: 'weighted low, a shot high', allocation: [2, 1, 1, 0, 1] },
+  { id: 'moon', label: 'All in', hint: 'everything on the 50x', allocation: [0, 0, 0, 0, 5] },
+];

@@ -61,8 +61,7 @@ export function FairnessPanel({ chainId, gameAddress, isDemo }: FairnessPanelPro
       )}
 
       <p className="panel__note">
-        Every lane is drawn from verifiable randomness on chain. The animation you see is a
-        replay of the settled result, never a guess made here.
+        The board replays the settled result. It never guesses it.
       </p>
     </section>
   );

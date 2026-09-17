@@ -45,27 +45,38 @@ export function Board({ allocation, round, interactive, onAssign, onUnassign }: 
             <div key={lane} className={`lane lane--${state}`}>
               <div className="lane__readout">
                 <span className="lane__prize">{prize}x</span>
-                <span className="lane__chance">{coins > 0 ? `${(chance * 100).toFixed(1)}%` : ''}</span>
+                {/* Before the drop this is the odds; after it, the verdict. Same slot, so
+                    nothing is printed over the coins. */}
+                {state === 'toppled' || state === 'held' ? (
+                  <span className="lane__verdict" data-state={state}>
+                    {state === 'toppled' ? 'Over' : 'Held'}
+                  </span>
+                ) : (
+                  <span className="lane__chance">{coins > 0 ? `${(chance * 100).toFixed(1)}%` : ''}</span>
+                )}
               </div>
 
               <div className="lane__stage">
-                <div className="lane__pile" aria-hidden="true">
+                <div
+                  className="lane__pile"
+                  aria-hidden="true"
+                  style={{ '--stack': PILE_DEPTH[lane] } as React.CSSProperties}
+                >
                   {Array.from({ length: PILE_DEPTH[lane] }, (_, index) => (
                     <span
                       key={index}
                       className="disc"
                       style={{
+                        '--i': index,
                         '--lean': `${LEAN[index % LEAN.length]}px`,
-                        '--fall-delay': `${index * 14}ms`,
+                        '--spin': `${(index * 37) % 360}deg`,
+                        '--fall-delay': `${(PILE_DEPTH[lane] - index) * 22}ms`,
                       } as React.CSSProperties}
                     />
                   ))}
                 </div>
               </div>
 
-              <span className="lane__verdict" data-state={state}>
-                {state === 'toppled' ? 'Over' : state === 'held' ? 'Held' : ''}
-              </span>
             </div>
           );
         })}

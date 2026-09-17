@@ -144,12 +144,11 @@
 }
 
 /*
- * Slack is shared across every panel in a column rather than dumped between them.
- * space-between left visible voids; stretching one panel made a table's rows drift
- * halfway down the screen. Each panel simply gets a little taller.
+ * The columns are filled with content rather than stretched. An earlier pass grew the
+ * panels to fit the screen, which just moved the empty space inside them.
  */
-.layout__left > .panel,
-.layout__right > .panel {
+.layout__left > .panel:last-child,
+.layout__right > .panel:last-child {
   flex: 1 1 auto;
 }
 
@@ -350,12 +349,12 @@
 }
 
 .lane {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-  padding-bottom: var(--space-2);
 }
 
 .lane__readout {
@@ -384,7 +383,13 @@
   min-height: 14px;
 }
 
-/* Piles grow upward from the beam, so the stage is bottom-anchored and takes the slack. */
+/*
+ * The pile is genuinely three-dimensional: the discs are circles lying in a plane tilted
+ * back 72 degrees, stacked along Z. Perspective does the rest, so discs higher in a stack
+ * sit closer to the camera and read slightly larger, and the outer lanes skew away from
+ * the centre. No 3D library — a tilted plane and translateZ is all this shape needs, and
+ * it keeps the bundle small enough to load instantly.
+ */
 .lane__stage {
   flex: 1;
   display: flex;
@@ -392,70 +397,109 @@
   justify-content: center;
   min-height: 210px;
   width: 100%;
+  perspective: 1200px;
+  perspective-origin: 50% 24%;
 }
 
 .lane__pile {
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
+  position: relative;
+  width: 100%;
+  /* Reserve the on-screen height the stack will occupy once tilted. */
+  height: calc(var(--stack, 3) * var(--disc-rise) + var(--disc-size) * 0.3);
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tilt));
   transform-origin: 50% 100%;
 }
 
+:root {
+  --tilt: 72deg;
+  --disc-size: 52px;
+  --disc-step: 7px;
+  /* translateZ(step) lifts the disc by step*sin(tilt) on screen. */
+  --disc-rise: 6.66px;
+}
+
 .disc {
-  width: 46px;
-  height: 12px;
-  margin-top: -4px;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: var(--disc-size);
+  height: var(--disc-size);
+  margin-left: calc(var(--disc-size) / -2);
   border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 34%, var(--gold-face) 0%, var(--gold-bright) 46%, var(--gold-edge) 100%);
   border: 1px solid var(--gold-edge);
-  background: linear-gradient(
-    180deg,
-    var(--gold-face) 0%,
-    var(--gold-bright) 52%,
-    var(--gold-edge) 100%
-  );
-  box-shadow: var(--shadow-coin);
-  transform: translateX(var(--lean, 0));
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.16),
+    0 2px 5px rgb(0 0 0 / 0.3);
+  transform: translateZ(calc(var(--i) * var(--disc-step))) translateX(var(--lean, 0)) rotate(var(--spin, 0deg));
+  transform-style: preserve-3d;
+}
+
+/* The milled edge, drawn as a ring so the disc reads as metal rather than a flat dot. */
+.disc::after {
+  content: '';
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  border: 1px solid rgb(0 0 0 / 0.14);
+  background: radial-gradient(circle at 40% 36%, rgb(255 255 255 / 0.32), transparent 62%);
 }
 
 .lane--deciding .lane__pile {
-  animation: shudder 420ms ease-in-out;
+  animation: shudder3d 460ms ease-in-out;
 }
 
-@keyframes shudder {
-  0%, 100% { transform: translateX(0) rotate(0); }
-  15%      { transform: translateX(-2px) rotate(-1.2deg); }
-  38%      { transform: translateX(2px) rotate(1.2deg); }
-  60%      { transform: translateX(-1px) rotate(-0.6deg); }
-  82%      { transform: translateX(1px) rotate(0.4deg); }
+@keyframes shudder3d {
+  0%, 100% { transform: rotateX(var(--tilt)) rotateZ(0deg); }
+  18%      { transform: rotateX(var(--tilt)) rotateZ(-1.6deg) translateX(-3px); }
+  42%      { transform: rotateX(var(--tilt)) rotateZ(1.6deg) translateX(3px); }
+  66%      { transform: rotateX(var(--tilt)) rotateZ(-0.8deg) translateX(-1px); }
 }
 
-/* Over the edge: the discs fall past the beam and out of the board. */
+/* Over the edge: each disc topples forward off the beam and falls out of frame. */
 .lane--toppled .disc {
-  animation: tumble 640ms cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards;
+  animation: tumble3d 760ms cubic-bezier(0.5, 0.02, 0.72, 0.28) forwards;
   animation-delay: var(--fall-delay, 0ms);
 }
 
-@keyframes tumble {
-  0%   { transform: translate(var(--lean, 0), 0) rotate(0); opacity: 1; }
-  100% { transform: translate(calc(var(--lean, 0) + 18px), 210px) rotate(84deg); opacity: 0; }
+@keyframes tumble3d {
+  0% {
+    transform: translateZ(calc(var(--i) * var(--disc-step))) translateX(var(--lean, 0)) rotate(var(--spin, 0deg));
+    opacity: 1;
+  }
+  100% {
+    transform:
+      translateZ(calc(var(--i) * var(--disc-step)))
+      translateY(240px)
+      translateX(calc(var(--lean, 0) + 26px))
+      rotateX(-150deg)
+      rotate(calc(var(--spin, 0deg) + 90deg));
+    opacity: 0;
+  }
 }
 
 .lane--held .lane__pile {
-  animation: settle 260ms ease-out;
+  animation: settle3d 300ms ease-out;
 }
 
-@keyframes settle {
-  0%   { transform: translateY(-3px); }
-  60%  { transform: translateY(1px); }
-  100% { transform: translateY(0); }
+@keyframes settle3d {
+  0%   { transform: rotateX(var(--tilt)) translateY(-4px); }
+  58%  { transform: rotateX(var(--tilt)) translateY(2px); }
+  100% { transform: rotateX(var(--tilt)) translateY(0); }
 }
 
 .lane__verdict {
-  min-height: 15px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: transparent;
+  animation: verdict-in 220ms ease-out;
+}
+
+@keyframes verdict-in {
+  0%   { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 .lane__verdict[data-state='toppled'] { color: var(--win); }
@@ -1024,4 +1068,259 @@
 
 .fair__contract a:hover {
   text-decoration: underline;
+}
+
+/* --- quick spreads -------------------------------------------------------- */
+
+.presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: var(--space-2) 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) ease,
+    transform var(--duration-fast) ease,
+    background var(--duration-fast) ease;
+}
+
+.preset:hover:not(:disabled) {
+  border-color: var(--teal);
+  transform: translateY(-2px);
+}
+
+.preset:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.preset--active {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold-bright) 14%, var(--bg));
+}
+
+/* A five-bar sketch of where the coins land. */
+.preset__shape {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+}
+
+.preset__bar {
+  position: relative;
+  width: 4px;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--recess);
+  overflow: hidden;
+}
+
+.preset__bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--fill, 0) * 100%);
+  background: linear-gradient(180deg, var(--gold-face), var(--gold-bright));
+  transition: height var(--duration-base) ease;
+}
+
+.preset__label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-dim);
+}
+
+.preset--active .preset__label {
+  color: var(--gold);
+}
+
+/* --- risk read-out -------------------------------------------------------- */
+
+.risk {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.risk dt {
+  font-size: 10px;
+  color: var(--ink-fade);
+}
+
+.risk dd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 3px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.risk__meter {
+  display: flex;
+  gap: 2px;
+}
+
+.risk__meter span {
+  width: 6px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--recess);
+  border: 1px solid var(--line-strong);
+  transition: background var(--duration-base) ease, border-color var(--duration-base) ease;
+}
+
+.risk__meter span.is-lit {
+  background: var(--gold-bright);
+  border-color: var(--gold-edge);
+}
+
+.risk__word {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-dim);
+}
+
+/*
+ * On the three-column layout the board is the hero and must never be pushed below the
+ * fold by a column that grew. The page takes exactly the height available and the rails
+ * scroll inside themselves if their panels outgrow it. Narrower layouts keep normal page
+ * scrolling, where stacking order already puts the board first.
+ */
+@media (min-width: 1081px) {
+  .shell {
+    height: var(--app-height, auto);
+    overflow: hidden;
+  }
+
+  .layout {
+    min-height: 0;
+  }
+
+  .layout__left,
+  .layout__right {
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .layout__stage {
+    min-height: 0;
+  }
+}
+
+/* --- alive ---------------------------------------------------------------- */
+
+/*
+ * The top pile catches the light every few seconds. It is the only unprompted motion on
+ * the page, and it is there because the 50x pile is what the player is really looking at.
+ */
+.lane:last-child .lane__pile::after {
+  content: '';
+  position: absolute;
+  inset: -6% -14%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, rgb(255 255 255 / 0.5), transparent 58%);
+  opacity: 0;
+  pointer-events: none;
+  animation: glint 6.5s ease-in-out infinite;
+}
+
+@keyframes glint {
+  0%, 82%  { opacity: 0; transform: translateX(-38%); }
+  88%      { opacity: 0.55; }
+  100%     { opacity: 0; transform: translateX(38%); }
+}
+
+/* A win is felt before it is read. */
+.shell[data-celebrate] .board {
+  animation: nudge 420ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+.shell[data-celebrate='jackpot'] .board {
+  animation: quake 780ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes nudge {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  30%      { transform: translate3d(0, -4px, 0); }
+  60%      { transform: translate3d(0, 2px, 0); }
+}
+
+@keyframes quake {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0); }
+  12%      { transform: translate3d(-7px, -3px, 0) rotate(-0.5deg); }
+  28%      { transform: translate3d(6px, 3px, 0) rotate(0.5deg); }
+  44%      { transform: translate3d(-5px, 2px, 0) rotate(-0.35deg); }
+  62%      { transform: translate3d(4px, -2px, 0) rotate(0.25deg); }
+  80%      { transform: translate3d(-2px, 1px, 0) rotate(0); }
+}
+
+/* Gold wash over the board, strongest on a jackpot. */
+.shell[data-celebrate]::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background: radial-gradient(60% 40% at 50% 46%, var(--gold-bright), transparent 70%);
+  opacity: 0;
+  animation: wash 900ms ease-out;
+}
+
+.shell[data-celebrate='jackpot']::after {
+  animation: wash-big 1600ms ease-out;
+}
+
+@keyframes wash {
+  0%   { opacity: 0.16; }
+  100% { opacity: 0; }
+}
+
+@keyframes wash-big {
+  0%   { opacity: 0.34; }
+  40%  { opacity: 0.14; }
+  100% { opacity: 0; }
+}
+
+/* Loading a pile should feel like dropping a coin in a slot. */
+.slot:hover:not(:disabled) .slot__ghost {
+  border-color: var(--teal);
+  transform: translateY(-2px);
+}
+
+.slot__ghost {
+  transition: border-color var(--duration-fast) ease, transform var(--duration-fast) ease;
+}
+
+.slot:active:not(:disabled) {
+  background: color-mix(in srgb, var(--teal) 18%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lane:last-child .lane__pile::after,
+  .shell[data-celebrate] .board,
+  .shell[data-celebrate]::after,
+  .lane__verdict {
+    animation: none;
+  }
+  .shell[data-celebrate]::after { opacity: 0; }
 }

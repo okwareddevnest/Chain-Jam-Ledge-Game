@@ -1,6 +1,10 @@
-import { N_COINS } from '../lib/ledge';
+import { N_COINS, type Preset } from '../lib/ledge';
+import { SpreadPresets } from './SpreadPresets';
 
 type BetPanelProps = {
+  allocation: number[];
+  onPickPreset: (preset: Preset) => void;
+  presetsDisabled: boolean;
   coinsPlaced: number;
   wagerText: string;
   symbol: string;
@@ -16,6 +20,9 @@ type BetPanelProps = {
 };
 
 export function BetPanel({
+  allocation,
+  onPickPreset,
+  presetsDisabled,
   coinsPlaced,
   wagerText,
   symbol,
@@ -49,6 +56,8 @@ export function BetPanel({
           Clear
         </button>
       </div>
+
+      <SpreadPresets allocation={allocation} disabled={presetsDisabled} onPick={onPickPreset} />
 
       <label className="field" htmlFor="wager">
         <span className="field__label">Stake</span>
