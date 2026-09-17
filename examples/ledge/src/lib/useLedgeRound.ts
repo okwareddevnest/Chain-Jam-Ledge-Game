@@ -41,6 +41,9 @@ const LANE_REVEAL_MS = 520;
 const SETTLE_HOLD_MS = 420;
 /** How long a session may sit in WAITING_RANDOMNESS before we offer the recovery path. */
 const STUCK_RANDOMNESS_MS = 30_000;
+/** Phases a new bet may start from. Anything else means a round is still in flight. */
+const RESTARTABLE_PHASES: readonly RoundPhase[] = ['idle', 'settled', 'error'];
+
 /** Grace period for the host handshake before falling back to the standalone demo. */
 const HANDSHAKE_GRACE_MS = 1_200;
 
@@ -97,8 +100,17 @@ export function useLedgeRound(
   const sessionKeyRef = useRef<string | null>(null);
   const hostApiRef = useRef<HostApiV1 | null>(null);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const roundRef = useRef<ActiveRound>(round);
+  /**
+   * Synchronous re-entrancy latch. `roundRef` only catches a repeat bet on a later tick,
+   * because it is assigned during render; two clicks dispatched in the same tick both see
+   * the old phase. This is set before any await, so the second one cannot get through.
+   */
+  const betInFlightRef = useRef(false);
 
   hostApiRef.current = hostApi;
+  roundRef.current = round;
+
 
   const clearTimers = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
@@ -106,6 +118,10 @@ export function useLedgeRound(
   }, []);
 
   useEffect(() => clearTimers, [clearTimers]);
+
+  useEffect(() => {
+    if (RESTARTABLE_PHASES.includes(round.phase)) betInFlightRef.current = false;
+  }, [round.phase]);
 
   // Standalone demo detection. With no parent frame there is nothing that could ever host
   // us, so decide immediately; inside a frame, give the host a moment to answer first.
@@ -169,6 +185,11 @@ export function useLedgeRound(
     (allocation: number[], wager: bigint) => {
       if (!isValidAllocation(allocation)) return;
       if (wager <= 0n) return;
+      // The caller gates this too, but starting a second bet mid-cascade would clear the
+      // first round's timers and orphan its settled outcome, so guard the money path here.
+      if (betInFlightRef.current) return;
+      if (!RESTARTABLE_PHASES.includes(roundRef.current.phase)) return;
+      betInFlightRef.current = true;
 
       clearTimers();
       setStuck(false);
@@ -267,7 +288,23 @@ export function useLedgeRound(
 
   const recoverStuckBet = useCallback(() => {
     const sessionId = round.sessionId;
-    if (!sessionId || !hostApiRef.current?.cancelStuckRandomness) return;
+
+    // This is the only escape hatch offered for a stuck real-money bet. If it cannot run,
+    // say so — a button that silently does nothing is worse than no button.
+    if (!sessionId) {
+      setRound(current => ({
+        ...current,
+        message: 'The bet has not been confirmed on chain yet. Give it a moment and retry.',
+      }));
+      return;
+    }
+    if (!hostApiRef.current?.cancelStuckRandomness) {
+      setRound(current => ({
+        ...current,
+        message: 'This host cannot recover stuck bets. The round settles or refunds on its own.',
+      }));
+      return;
+    }
 
     void hostApiRef.current
       .cancelStuckRandomness({ sessionId })
@@ -282,6 +319,7 @@ export function useLedgeRound(
 
   const dismiss = useCallback(() => {
     clearTimers();
+    betInFlightRef.current = false;
     sessionKeyRef.current = null;
     setRound(idleRound());
   }, [clearTimers]);

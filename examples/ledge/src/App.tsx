@@ -167,6 +167,7 @@ export function App() {
 
   const hint = (() => {
     if (round.phase === 'error') return round.message ?? 'Something went wrong.';
+    if (round.message) return round.message;
     if (overBalance) return 'Not enough balance for that bet.';
     if (overMax && maxWager !== null)
       return `Max bet for this spread is ${formatAmount(maxWager, decimals)} ${symbol}.`;
