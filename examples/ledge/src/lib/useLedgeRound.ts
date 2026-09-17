@@ -39,6 +39,12 @@ export type ActiveRound = {
 const LANE_REVEAL_MS = 520;
 /** Beat held after the final lane before the payout is announced. */
 const SETTLE_HOLD_MS = 420;
+/**
+ * How long openSession may stay unsettled before we tell the player.
+ * A host that neither resolves nor rejects would otherwise leave them on a dead button
+ * with no idea whether their money moved.
+ */
+const OPEN_SESSION_TIMEOUT_MS = 45_000;
 /** How long a session may sit in WAITING_RANDOMNESS before we offer the recovery path. */
 const STUCK_RANDOMNESS_MS = 30_000;
 /** Phases a new bet may start from. Anything else means a round is still in flight. */
@@ -275,6 +281,26 @@ export function useLedgeRound(
 
     playCascade(state?.allocation ?? round.allocation, toppled, payout, row.sessionId ?? null);
   }, [snapshot, round.phase, round.allocation, round.sessionId, playCascade]);
+
+  // A host that never settles openSession would strand the round in `opening` forever.
+  useEffect(() => {
+    if (round.phase !== 'opening') return;
+
+    const timer = setTimeout(() => {
+      setRound(current =>
+        current.phase === 'opening'
+          ? {
+              ...current,
+              phase: 'error',
+              message:
+                'This bet is taking longer than expected to confirm. Check your balance before betting again.',
+            }
+          : current,
+      );
+    }, OPEN_SESSION_TIMEOUT_MS);
+
+    return () => clearTimeout(timer);
+  }, [round.phase]);
 
   // Offer the recovery path if randomness stalls.
   useEffect(() => {
