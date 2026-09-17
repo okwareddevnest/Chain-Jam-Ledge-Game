@@ -24,6 +24,7 @@ import { useCasinoHost } from './lib/useCasinoHost';
 import { useLedgeRound } from './lib/useLedgeRound';
 import { useAvailableHeight } from './lib/useAvailableHeight';
 import { useSessionStats } from './lib/useSessionStats';
+import { useTheme } from './lib/useTheme';
 
 const EMPTY_ALLOCATION = [0, 0, 0, 0, 0];
 
@@ -51,6 +52,9 @@ export function App() {
     useLedgeRound(hostApi, snapshot);
   const { stats, observedReturn, record } = useSessionStats();
   const availableHeight = useAvailableHeight(snapshot?.ui.viewport?.availableHeight);
+  const { preference: themePreference, setPreference: setThemePreference } = useTheme(
+    snapshot?.ui.theme,
+  );
 
   const [allocation, setAllocation] = useState<number[]>(EMPTY_ALLOCATION);
   const [wagerText, setWagerText] = useState('1');
@@ -62,14 +66,6 @@ export function App() {
   const coinsPlaced = allocation.reduce((acc, coins) => acc + coins, 0);
   const symbol = snapshot?.token.symbol ?? 'chUSD';
   const network = snapshot ? (NETWORKS[snapshot.integration.chainId] ?? null) : null;
-
-  // The host owns the theme; mirror it so the game never fights the surrounding page.
-  useEffect(() => {
-    const theme = snapshot?.ui.theme;
-    const root = document.documentElement;
-    if (theme === 'light' || theme === 'dark') root.setAttribute('data-theme', theme);
-    else root.removeAttribute('data-theme');
-  }, [snapshot?.ui.theme]);
 
   const wager = useMemo(() => {
     try {
@@ -309,6 +305,8 @@ export function App() {
         live={round.phase === 'waiting' || round.phase === 'revealing'}
         muted={muted}
         onToggleMute={toggleMute}
+        theme={themePreference}
+        onThemeChange={setThemePreference}
       />
 
       <div className="layout">

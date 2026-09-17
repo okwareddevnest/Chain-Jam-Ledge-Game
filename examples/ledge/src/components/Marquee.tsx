@@ -1,5 +1,7 @@
 import { Logo } from './Logo';
 import { Odometer } from './Odometer';
+import { ThemeSwitch } from './ThemeSwitch';
+import type { ThemePreference } from '../lib/useTheme';
 
 const BULBS = 6;
 
@@ -11,6 +13,8 @@ type MarqueeProps = {
   live: boolean;
   muted: boolean;
   onToggleMute: () => void;
+  theme: ThemePreference;
+  onThemeChange: (next: ThemePreference) => void;
 };
 
 /**
@@ -25,6 +29,8 @@ export function Marquee({
   live,
   muted,
   onToggleMute,
+  theme,
+  onThemeChange,
 }: MarqueeProps) {
   return (
     <header className={`marquee${live ? ' marquee--running' : ''}`}>
@@ -52,6 +58,8 @@ export function Marquee({
       </span>
 
       <div className="marquee__right">
+        <ThemeSwitch preference={theme} onChange={onThemeChange} />
+
         <button
           type="button"
           className="marquee__sound"

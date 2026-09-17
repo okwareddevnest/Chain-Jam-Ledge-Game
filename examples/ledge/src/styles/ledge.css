@@ -78,6 +78,36 @@
   gap: var(--space-2);
 }
 
+.themeswitch {
+  display: flex;
+  padding: 2px;
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius);
+  background: rgb(0 0 0 / 0.4);
+}
+
+.themeswitch__opt {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.55);
+  cursor: pointer;
+  transition: background var(--duration-fast) ease, color var(--duration-fast) ease;
+}
+
+.themeswitch__opt:hover { color: var(--gold-face); }
+
+.themeswitch__opt.is-on {
+  background: linear-gradient(180deg, rgb(242 179 44 / 0.9), rgb(180 124 18 / 0.9));
+  color: #2a1c00;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45);
+}
+
 .marquee__sound {
   display: grid;
   place-items: center;
