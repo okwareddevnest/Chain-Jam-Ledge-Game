@@ -144,7 +144,42 @@ const chainIsUp = async (): Promise<boolean> => {
 const address = loadGameAddress();
 const live = address !== null && (await chainIsUp());
 
-const client = createPublicClient({ transport: http(RPC_URL) });
+/** Local nodes answer instantly; a public RPC over the internet does not. */
+const IS_REMOTE = !RPC_URL.includes('127.0.0.1') && !RPC_URL.includes('localhost');
+const TIMEOUT = IS_REMOTE ? 600_000 : 20_000;
+
+/**
+ * Concurrency for the per-allocation sweeps. Public endpoints such as sepolia.base.org
+ * rate-limit hard (-32016 "over rate limit"), so remote runs stay deliberately slow and
+ * lean on JSON-RPC batching plus retry/backoff instead of parallelism.
+ */
+const BATCH = IS_REMOTE ? 2 : 16;
+
+const client = createPublicClient({
+  transport: http(RPC_URL, {
+    batch: IS_REMOTE ? { wait: 50 } : true,
+    retryCount: IS_REMOTE ? 10 : 3,
+    retryDelay: IS_REMOTE ? 800 : 100,
+    timeout: IS_REMOTE ? 60_000 : 10_000,
+  }),
+});
+
+/** Runs `task` over `items` with bounded concurrency, preserving order. */
+const mapLimit = async <T, R>(items: readonly T[], limit: number, task: (item: T, index: number) => Promise<R>): Promise<R[]> => {
+  const results: R[] = new Array(items.length);
+  let cursor = 0;
+
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (;;) {
+      const index = cursor++;
+      if (index >= items.length) return;
+      results[index] = await task(items[index], index);
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
+};
 
 const buildContext = (gameData: `0x${string}`, reservedProfit: bigint) =>
   ({
@@ -168,32 +203,39 @@ describe.skipIf(!live)(`Solidity / TypeScript parity against ${RPC_URL}`, () => 
   });
 
   it('quotes identical caps for every one of the 126 allocations', async () => {
-    for (const allocation of allAllocations()) {
-      const gameData = encodeGameData(allocation);
+    const quotes = await mapLimit(allAllocations(), BATCH, allocation =>
+      client
+        .readContract({
+          address: address!,
+          abi: ABI,
+          functionName: 'quoteCaps',
+          args: [WAGER, encodeGameData(allocation)],
+        })
+        .then(result => ({ allocation, result: result as [bigint, bigint] })),
+    );
 
-      const [onChainEscrow, onChainReserve] = (await client.readContract({
-        address: address!,
-        abi: ABI,
-        functionName: 'quoteCaps',
-        args: [WAGER, gameData],
-      })) as [bigint, bigint];
+    for (const { allocation, result } of quotes) {
+      const [onChainEscrow, onChainReserve] = result;
 
       expect(onChainEscrow).toBe(WAGER);
       expect(onChainReserve).toBe(maxReservedProfit(WAGER, allocation));
     }
-  });
+  }, TIMEOUT);
 
   it('quotes identical risk params, and never trips the heavy-tail thresholds', async () => {
-    for (const allocation of allAllocations()) {
-      const gameData = encodeGameData(allocation);
-
-      const [chainMaxPayout, chainProbabilityWad, chainExpected, chainSubJackpot] =
-        (await client.readContract({
+    const quotes = await mapLimit(allAllocations(), BATCH, allocation =>
+      client
+        .readContract({
           address: address!,
           abi: ABI,
           functionName: 'quoteRiskParams',
-          args: [WAGER, gameData],
-        })) as [bigint, bigint, bigint, bigint];
+          args: [WAGER, encodeGameData(allocation)],
+        })
+        .then(result => ({ allocation, result: result as [bigint, bigint, bigint, bigint] })),
+    );
+
+    for (const { allocation, result } of quotes) {
+      const [chainMaxPayout, chainProbabilityWad, chainExpected, chainSubJackpot] = result;
 
       expect(chainMaxPayout).toBe(maxPayout(WAGER, allocation));
       expect(chainProbabilityWad).toBe(topOutcomeProbabilityWad(allocation));
@@ -204,23 +246,33 @@ describe.skipIf(!live)(`Solidity / TypeScript parity against ${RPC_URL}`, () => 
       expect(chainMaxPayout / WAGER).toBeLessThanOrEqual(73n);
       expect(chainProbabilityWad).toBeLessThanOrEqual(10n ** 18n);
     }
-  });
+  }, TIMEOUT);
 
   it('settles every random seed to the same lanes and payout as the TypeScript mirror', async () => {
     const allocations = allAllocations();
+    const rounds: Array<{ allocation: number[]; seed: `0x${string}` }> = [];
     let seed = keccak256(toHex('ledge-parity'));
-
     for (let round = 0; round < 150; round += 1) {
-      const allocation = allocations[round % allocations.length];
-      const gameData = encodeGameData(allocation);
       seed = keccak256(seed);
+      rounds.push({ allocation: allocations[round % allocations.length], seed });
+    }
 
-      const result = (await client.readContract({
-        address: address!,
-        abi: ABI,
-        functionName: 'onRandomness',
-        args: [buildContext(gameData, maxReservedProfit(WAGER, allocation)), seed],
-      })) as {
+    const settled = await mapLimit(rounds, BATCH, ({ allocation, seed: roundSeed }) =>
+      client
+        .readContract({
+          address: address!,
+          abi: ABI,
+          functionName: 'onRandomness',
+          args: [
+            buildContext(encodeGameData(allocation), maxReservedProfit(WAGER, allocation)),
+            roundSeed,
+          ],
+        })
+        .then(result => ({ allocation, seed: roundSeed, result })),
+    );
+
+    for (const { allocation, seed: roundSeed, result: raw } of settled) {
+      const result = raw as {
         newGameState: `0x${string}`;
         escrowDelta: bigint;
         reservedProfitDelta: bigint;
@@ -229,7 +281,7 @@ describe.skipIf(!live)(`Solidity / TypeScript parity against ${RPC_URL}`, () => 
         payout: bigint;
       };
 
-      const expectedOutcome = resolve(allocation, seed);
+      const expectedOutcome = resolve(allocation, roundSeed);
 
       expect(result.payout).toBe(expectedOutcome.payoutMultiplier * WAGER);
       expect(result.nextPhase).toBe(3); // SETTLED
@@ -242,7 +294,7 @@ describe.skipIf(!live)(`Solidity / TypeScript parity against ${RPC_URL}`, () => 
       // The facet caps payout at escrowedStake + reservedProfit, with no slack.
       expect(result.payout).toBeLessThanOrEqual(WAGER + maxReservedProfit(WAGER, allocation));
     }
-  });
+  }, TIMEOUT);
 
   it('reserves exactly the profit the top win needs, so a jackpot cannot revert on the cap', async () => {
     for (const allocation of [

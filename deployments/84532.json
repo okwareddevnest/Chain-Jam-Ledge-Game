@@ -1,0 +1,10 @@
+{
+  "chainId": 84532,
+  "network": "Base Sepolia",
+  "contract": "LedgeGame",
+  "address": "0x5d07b33fa3c335b65b10313ff6b9db487020afc4",
+  "deployer": "0x342FB5546191eCd38C4050e6B4098db0371AcD0f",
+  "transactionHash": "0x6b8439872a0a943ffaff2360a8cdc064e310264c5583fdddcce6f4af00845410",
+  "blockNumber": 46936105,
+  "deployedAt": "2026-09-17T10:21:36.567Z"
+}
