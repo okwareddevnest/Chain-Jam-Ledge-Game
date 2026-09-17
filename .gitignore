@@ -6,3 +6,6 @@ deployed.json
 .env
 .env.*
 !.env.example
+
+# Local-chain deployment records are throwaway; real networks are committed.
+deployments/31337.json
