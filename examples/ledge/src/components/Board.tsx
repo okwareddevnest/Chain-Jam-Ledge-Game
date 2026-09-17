@@ -1,8 +1,11 @@
 import { LANE_COUNT, PRIZE_MULTIPLIER, toppleProbability } from '../lib/ledge';
 import type { ActiveRound } from '../lib/useLedgeRound';
 
-/** How many coins are drawn in each lane's pile — richer lanes simply look richer. */
-const PILE_DEPTH = [2, 3, 5, 8, 12];
+/** Coins drawn in each pile — a richer lane simply looks richer. */
+const PILE_DEPTH = [3, 5, 8, 13, 20];
+
+/** Nudges so a stack reads as hand-stacked metal, not a CSS gradient. */
+const LEAN = [0, 2, -2, 1, -1, 2, 0, -2, 1, -1, 2, -1, 0, 1, -2, 2, -1, 0, 1, -1];
 
 export type LaneState = 'idle' | 'deciding' | 'toppled' | 'held';
 
@@ -21,66 +24,91 @@ type BoardProps = {
   round: ActiveRound;
   interactive: boolean;
   onAssign: (lane: number) => void;
+  onUnassign: (lane: number) => void;
 };
 
-export function Board({ allocation, round, interactive, onAssign }: BoardProps) {
+export function Board({ allocation, round, interactive, onAssign, onUnassign }: BoardProps) {
   const showingOutcome = round.toppled !== null;
   const lanes = showingOutcome ? round.allocation : allocation;
 
   return (
-    <div className="board">
-      <div className="board__lanes">
+    <div className={`board${showingOutcome ? ' board--revealing' : ''}`}>
+      {/* Above the beam: the prize, and the pile you are trying to shift. */}
+      <div className="board__piles">
         {Array.from({ length: LANE_COUNT }, (_, lane) => {
           const coins = lanes[lane] ?? 0;
           const state = laneStateFor(round, lane);
           const prize = Number(PRIZE_MULTIPLIER[lane]);
+          const chance = coins > 0 ? toppleProbability(lane, coins) : 0;
+
+          return (
+            <div key={lane} className={`lane lane--${state}`}>
+              <div className="lane__readout">
+                <span className="lane__prize">{prize}x</span>
+                <span className="lane__chance">{coins > 0 ? `${(chance * 100).toFixed(1)}%` : ''}</span>
+              </div>
+
+              <div className="lane__stage">
+                <div className="lane__pile" aria-hidden="true">
+                  {Array.from({ length: PILE_DEPTH[lane] }, (_, index) => (
+                    <span
+                      key={index}
+                      className="disc"
+                      style={{
+                        '--lean': `${LEAN[index % LEAN.length]}px`,
+                        '--fall-delay': `${index * 14}ms`,
+                      } as React.CSSProperties}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <span className="lane__verdict" data-state={state}>
+                {state === 'toppled' ? 'Over' : state === 'held' ? 'Held' : ''}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* The beam itself. Everything above rests on it; everything below is yours. */}
+      <div className="board__beam" aria-hidden="true" />
+
+      {/* Below the beam: the coins you are about to push with. */}
+      <div className="board__slots">
+        {Array.from({ length: LANE_COUNT }, (_, lane) => {
+          const coins = lanes[lane] ?? 0;
+          const prize = Number(PRIZE_MULTIPLIER[lane]);
+          const chance = coins > 0 ? toppleProbability(lane, coins) : 0;
 
           return (
             <button
               key={lane}
               type="button"
-              className={`lane${state === 'idle' ? '' : ` lane--${state}`}`}
+              className={`slot${coins > 0 ? ' slot--loaded' : ''}`}
               disabled={!interactive}
               onClick={() => onAssign(lane)}
+              onContextMenu={event => {
+                event.preventDefault();
+                onUnassign(lane);
+              }}
               aria-label={
-                `Lane ${lane + 1}, pays ${prize} times your bet. ` +
-                `${coins} of your coins assigned` +
-                (coins > 0 ? `, ${(toppleProbability(lane, coins) * 100).toFixed(2)} percent to topple.` : '.')
+                `Pile ${lane + 1}, pays ${prize} times your stake. ` +
+                `${coins} of your coins loaded` +
+                (coins > 0 ? `, ${(chance * 100).toFixed(2)} percent to topple.` : '.')
               }
             >
-              <span className="lane__prize">{prize}x</span>
-
-              <span className="lane__odds">
-                {coins > 0 ? `${(toppleProbability(lane, coins) * 100).toFixed(1)}%` : ''}
+              <span className="slot__coins">
+                {coins > 0
+                  ? Array.from({ length: coins }, (_, index) => (
+                      <span key={index} className="load-coin" aria-hidden="true" />
+                    ))
+                  : <span className="slot__ghost" aria-hidden="true" />}
               </span>
-
-              <span className="lane__pile" aria-hidden="true">
-                {Array.from({ length: PILE_DEPTH[lane] }, (_, index) => (
-                  <span key={index} className="coin" />
-                ))}
-              </span>
-
-              <span
-                className="lane__verdict"
-                data-result={state === 'toppled' ? 'toppled' : state === 'held' ? 'held' : undefined}
-              >
-                {state === 'toppled' ? 'TOPPLED' : state === 'held' ? 'HELD' : ''}
-              </span>
+              <span className="slot__hint">{coins > 0 ? `${coins}` : 'load'}</span>
             </button>
           );
         })}
-      </div>
-
-      <div className="board__ledge" aria-hidden="true" />
-
-      <div className="board__slots">
-        {Array.from({ length: LANE_COUNT }, (_, lane) => (
-          <span key={lane} className="lane__slot" aria-hidden="true">
-            {Array.from({ length: lanes[lane] ?? 0 }, (_, index) => (
-              <span key={index} className="slot-coin" />
-            ))}
-          </span>
-        ))}
       </div>
     </div>
   );

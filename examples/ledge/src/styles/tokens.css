@@ -18,6 +18,13 @@
   --ink-dim: #57534e;
   --ink-fade: #6e6860;
 
+  --beam: #b9ad97;
+  --beam-face: #8e8371;
+  --beam-edge: #6d6455;
+  --felt: #ecebe6;
+  --felt-deep: #e2e0d8;
+  --brass: #8a6d2f;
+
   --gold: #b45309;
   --gold-bright: #f59e0b;
   --gold-face: #fcd34d;
@@ -71,7 +78,21 @@
     --ink-dim: #b5aea4;
     --ink-fade: #968f84;
 
-    --gold: #fbbf24;
+    --beam: #3a342b;
+    --beam-face: #241f19;
+    --beam-edge: #514839;
+    --felt: #1c1a17;
+    --felt-deep: #141311;
+    --brass: #d4af5f;
+
+    --beam: #3a342b;
+  --beam-face: #241f19;
+  --beam-edge: #514839;
+  --felt: #1c1a17;
+  --felt-deep: #141311;
+  --brass: #d4af5f;
+
+  --gold: #fbbf24;
     --gold-bright: #f59e0b;
     --gold-face: #fde68a;
     --gold-edge: #b45309;
@@ -132,7 +153,7 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  background: var(--surface);
   color: var(--ink);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;

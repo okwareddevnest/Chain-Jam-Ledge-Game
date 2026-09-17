@@ -3,36 +3,45 @@ import { computeMaxWager } from '@chain/casino-sdk/guest';
 import { formatUnits, parseUnits } from 'viem';
 
 import { Board } from './components/Board';
-import { Controls } from './components/Controls';
-import { LANE_COUNT, N_COINS, PRIZE_MULTIPLIER, maxMultiplierX } from './lib/ledge';
+import { BetPanel } from './components/BetPanel';
+import { HistoryStrip } from './components/HistoryStrip';
+import { Hud } from './components/Hud';
+import { LastRound } from './components/LastRound';
+import { Paytable } from './components/Paytable';
+import { SessionPanel } from './components/SessionPanel';
+import { formatAmount } from './lib/format';
+import { LANE_COUNT, N_COINS, PRIZE_MULTIPLIER, maxMultiplierX, maxPayout } from './lib/ledge';
 import { isMuted, play, setMuted } from './lib/sound';
 import { useCasinoHost } from './lib/useCasinoHost';
 import { useLedgeRound } from './lib/useLedgeRound';
+import { useSessionStats } from './lib/useSessionStats';
 
 const EMPTY_ALLOCATION = [0, 0, 0, 0, 0];
 
-/** Worst-case multiplier, used to clamp the bet before the player has placed any coins. */
+/** Worst-case multiplier, used to clamp the stake before any coin is placed. */
 const WORST_CASE_MULTIPLIER = PRIZE_MULTIPLIER.reduce((acc, prize) => acc + Number(prize), 0);
 
-const formatAmount = (value: bigint, decimals: number): string => {
-  const text = formatUnits(value, decimals);
-  const asNumber = Number(text);
-  if (!Number.isFinite(asNumber)) return text;
-  return asNumber.toLocaleString(undefined, { maximumFractionDigits: 4 });
+const NETWORKS: Record<number, string> = {
+  8453: 'Base',
+  84532: 'Base Sepolia',
+  31337: 'Local chain',
 };
 
 export function App() {
   const { hostApi, snapshot } = useCasinoHost();
   const { round, isDemo, demoBalance, decimals, canBet, stuck, drop, dismiss, recoverStuckBet } =
     useLedgeRound(hostApi, snapshot);
+  const { stats, observedReturn, record } = useSessionStats();
 
   const [allocation, setAllocation] = useState<number[]>(EMPTY_ALLOCATION);
   const [wagerText, setWagerText] = useState('1');
   const [muted, setMutedState] = useState(isMuted);
   const revealedRef = useRef(0);
+  const previousPhaseRef = useRef(round.phase);
 
   const coinsPlaced = allocation.reduce((acc, coins) => acc + coins, 0);
   const symbol = snapshot?.token.symbol ?? 'chUSD';
+  const network = snapshot ? (NETWORKS[snapshot.integration.chainId] ?? null) : null;
 
   // The host owns the theme; mirror it so the game never fights the surrounding page.
   useEffect(() => {
@@ -58,9 +67,7 @@ export function App() {
     return result.kind === 'limit' ? result.maxWager : null;
   }, [snapshot, allocation, coinsPlaced]);
 
-  const balance = isDemo
-    ? demoBalance
-    : BigInt(snapshot?.balances.smartVaultBalance ?? '0');
+  const balance = isDemo ? demoBalance : BigInt(snapshot?.balances.smartVaultBalance ?? '0');
 
   const overBalance = wager > balance;
   const overMax = maxWager !== null && wager > maxWager;
@@ -82,22 +89,39 @@ export function App() {
     revealedRef.current = round.revealedLanes;
   }, [round.revealedLanes, round.toppled, round.allocation]);
 
+  // Record the round once, on the transition into `settled`.
   useEffect(() => {
-    if (round.phase !== 'settled' || round.payout === null || round.wager === 0n) return;
-    if (round.payout >= round.wager * 15n) play('jackpot');
-  }, [round.phase, round.payout, round.wager]);
+    const settledNow = previousPhaseRef.current !== 'settled' && round.phase === 'settled';
+    previousPhaseRef.current = round.phase;
 
-  const assign = useCallback(
-    (lane: number) => {
-      setAllocation(current => {
-        const placed = current.reduce((acc, coins) => acc + coins, 0);
-        if (placed >= N_COINS) return current;
-        play('place');
-        return current.map((coins, index) => (index === lane ? coins + 1 : coins));
-      });
-    },
-    [],
-  );
+    if (!settledNow || round.payout === null || round.toppled === null) return;
+
+    record({
+      allocation: round.allocation,
+      toppled: round.toppled,
+      wager: round.wager,
+      payout: round.payout,
+    });
+
+    if (round.payout >= round.wager * 15n && round.wager > 0n) play('jackpot');
+  }, [round.phase, round.payout, round.toppled, round.allocation, round.wager, record]);
+
+  const assign = useCallback((lane: number) => {
+    setAllocation(current => {
+      const placed = current.reduce((acc, coins) => acc + coins, 0);
+      if (placed >= N_COINS) return current;
+      play('place');
+      return current.map((coins, index) => (index === lane ? coins + 1 : coins));
+    });
+  }, []);
+
+  const unassign = useCallback((lane: number) => {
+    setAllocation(current => {
+      if (current[lane] === 0) return current;
+      play('clear');
+      return current.map((coins, index) => (index === lane ? coins - 1 : coins));
+    });
+  }, []);
 
   const clear = useCallback(() => {
     play('clear');
@@ -136,7 +160,7 @@ export function App() {
     });
   }, []);
 
-  // Number keys drop a coin into a lane — faster than aiming at a 60px column.
+  // Number keys load a pile — faster than aiming at a column.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLInputElement) return;
@@ -149,114 +173,119 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [assign, clear, canBet, canDrop, handleDrop]);
 
-  const showingResult = round.phase === 'settled' && round.payout !== null;
-  const won = showingResult && round.payout! > 0n;
-
   const walletStatus = snapshot?.wallet.status;
   const waitingForHost = !isDemo && !hostApi;
-  const walletBlocked = !isDemo && hostApi && walletStatus !== 'ready';
+  const walletBlocked = !isDemo && Boolean(hostApi) && walletStatus !== 'ready';
 
   const busyLabel =
     round.phase === 'opening'
-      ? 'PLACING BET…'
+      ? 'Placing the bet'
       : round.phase === 'waiting'
-        ? 'WAITING FOR RANDOMNESS…'
+        ? 'Waiting for randomness'
         : round.phase === 'revealing'
-          ? 'TOPPLING…'
+          ? 'Toppling'
           : null;
 
-  const hint = (() => {
-    if (round.phase === 'error') return round.message ?? 'Something went wrong.';
+  const notice = (() => {
+    if (round.phase === 'error') return round.message ?? 'That did not go through.';
     if (round.message) return round.message;
-    if (overBalance) return 'Not enough balance for that bet.';
-    if (overMax && maxWager !== null)
-      return `Max bet for this spread is ${formatAmount(maxWager, decimals)} ${symbol}.`;
-    if (!allocationReady) return `Tap the lanes to place all ${N_COINS} coins. Bigger pile, bigger prize.`;
-    return 'Every coin is worth the same — the lane only picks your risk.';
+    if (waitingForHost) return 'Connecting to the casino.';
+    if (walletBlocked) {
+      if (walletStatus === 'disconnected') return 'Connect your wallet in the app above to play.';
+      if (walletStatus === 'setup-required') return 'Finish wallet setup in the app above to play.';
+      return 'Your session key needs refreshing before you can bet.';
+    }
+    if (overBalance) return 'That stake is more than your balance.';
+    if (overMax && maxWager !== null) {
+      return `Most you can stake on this spread is ${formatAmount(maxWager, decimals)} ${symbol}.`;
+    }
+    if (!allocationReady) {
+      const left = N_COINS - coinsPlaced;
+      return `Load ${left} more ${left === 1 ? 'coin' : 'coins'} onto the piles. Click a pile to add, right-click to take one back.`;
+    }
+    return null;
   })();
 
+  const noticeIsProblem =
+    round.phase === 'error' || overBalance || overMax || walletBlocked || waitingForHost;
+
+  const maxPayoutText = allocationReady && wager > 0n
+    ? `${formatAmount(maxPayout(wager, allocation), decimals)} ${symbol}`
+    : null;
+
   return (
-    <main className="app">
-      <header className="bar">
-        <div className="bar__brand">
-          <h1 className="bar__title">LEDGE</h1>
-          <span className="bar__rtp">96% RTP</span>
-        </div>
+    <div className="shell">
+      <Hud
+        balance={formatAmount(balance, decimals)}
+        symbol={symbol}
+        isDemo={isDemo}
+        network={network}
+        muted={muted}
+        onToggleMute={toggleMute}
+      />
 
-        <div className="bar__right">
-          {isDemo && <span className="badge">DEMO</span>}
-          <span className="balance">
-            {formatAmount(balance, decimals)} <span>{symbol}</span>
-          </span>
-          <button
-            type="button"
-            className="icon-button"
-            onClick={toggleMute}
-            aria-label={muted ? 'Unmute sound' : 'Mute sound'}
-          >
-            {muted ? '🔇' : '🔊'}
-          </button>
-        </div>
-      </header>
+      <div className="layout">
+        <aside className="layout__left">
+          <SessionPanel
+            stats={stats}
+            observedReturn={observedReturn}
+            decimals={decimals}
+            symbol={symbol}
+          />
+          <Paytable allocation={round.toppled ? round.allocation : allocation} />
+        </aside>
 
-      {waitingForHost && <p className="notice">Connecting to the casino host…</p>}
+        <main className="layout__stage">
+          <Board
+            allocation={allocation}
+            round={round}
+            interactive={canBet}
+            onAssign={assign}
+            onUnassign={unassign}
+          />
 
-      {walletBlocked && (
-        <p className="notice">
-          {walletStatus === 'disconnected'
-            ? 'Connect your wallet in the app above to play for real.'
-            : walletStatus === 'setup-required'
-              ? 'Finish wallet setup in the app above to play.'
-              : 'Your session key needs refreshing before you can bet.'}
-        </p>
-      )}
+          {notice && (
+            <p className={`notice${noticeIsProblem ? ' notice--problem' : ''}`} role="status">
+              {notice}
+            </p>
+          )}
 
-      <Board allocation={allocation} round={round} interactive={canBet} onAssign={assign} />
-
-      {showingResult ? (
-        <div className="result" data-outcome={won ? 'win' : 'loss'}>
-          <div>
-            <div className="result__amount">
-              {won ? `+${formatAmount(round.payout!, decimals)} ${symbol}` : 'Nothing toppled'}
+          {stuck && (
+            <div className="recover" role="alert">
+              <span>Randomness is taking longer than usual.</span>
+              <button type="button" onClick={recoverStuckBet}>
+                Recover the bet
+              </button>
             </div>
-            <div className="result__label">
-              {won
-                ? `${round.toppled!.filter(Boolean).length} of ${round.allocation.filter(c => c > 0).length} lanes went over`
-                : 'The piles held. Try a different spread.'}
-            </div>
-          </div>
-          <button type="button" className="link-button" onClick={startNextRound}>
-            Play again
-          </button>
-        </div>
-      ) : (
-        <Controls
-          coinsPlaced={coinsPlaced}
-          wagerText={wagerText}
-          symbol={symbol}
-          maxWagerText={maxWager === null ? null : formatAmount(maxWager, decimals)}
-          canDrop={canDrop}
-          busyLabel={busyLabel}
-          onWagerChange={setWagerText}
-          onWagerStep={stepWager}
-          onMax={applyMax}
-          onClear={clear}
-          onDrop={handleDrop}
-        />
-      )}
+          )}
+        </main>
 
-      {stuck && (
-        <div className="result">
-          <div className="result__label">Randomness is taking longer than usual.</div>
-          <button type="button" className="link-button" onClick={recoverStuckBet}>
-            Recover bet
-          </button>
-        </div>
-      )}
+        <aside className="layout__right">
+          <BetPanel
+            coinsPlaced={coinsPlaced}
+            wagerText={wagerText}
+            symbol={symbol}
+            maxWagerText={maxWager === null ? null : formatAmount(maxWager, decimals)}
+            maxPayoutText={maxPayoutText}
+            canDrop={canDrop}
+            busyLabel={busyLabel}
+            onWagerChange={setWagerText}
+            onWagerStep={stepWager}
+            onMax={applyMax}
+            onClear={clear}
+            onDrop={handleDrop}
+          />
+          <LastRound
+            round={stats.history.at(-1) ?? null}
+            decimals={decimals}
+            symbol={symbol}
+            onPlayAgain={startNextRound}
+            live={round.phase === 'settled' || round.phase === 'error'}
+          />
+        </aside>
+      </div>
 
-      <p className={`hint${round.phase === 'error' || overBalance || overMax ? ' hint--error' : ''}`}>
-        {hint}
-      </p>
-    </main>
+      <HistoryStrip history={stats.history} />
+    </div>
   );
 }
