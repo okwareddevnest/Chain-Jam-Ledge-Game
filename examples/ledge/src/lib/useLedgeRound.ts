@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { HostApiV1, HostSnapshotV1 } from '@chain/casino-sdk/guest';
 import { toHex } from 'viem';
 
+import { isEmbedded } from './environment';
 import {
   LANE_COUNT,
   PRIZE_MULTIPLIER,
@@ -106,8 +107,13 @@ export function useLedgeRound(
 
   useEffect(() => clearTimers, [clearTimers]);
 
-  // No host answered the handshake: this is the standalone demo build.
+  // Standalone demo detection. With no parent frame there is nothing that could ever host
+  // us, so decide immediately; inside a frame, give the host a moment to answer first.
   useEffect(() => {
+    if (!isEmbedded()) {
+      setIsDemo(true);
+      return;
+    }
     if (hostApi) {
       setIsDemo(false);
       return;

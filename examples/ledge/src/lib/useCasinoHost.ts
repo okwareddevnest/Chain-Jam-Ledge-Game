@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+
+import { isEmbedded } from './environment';
 import {
   connectGameToHost,
   observeGameContentSize,
@@ -20,6 +22,11 @@ export function useCasinoHost(): {
   const [snapshot, setSnapshot] = useState<HostSnapshotV1 | null>(null);
 
   useEffect(() => {
+    // Penpal's handshake is symmetric: at the top level it would connect to this very
+    // window and resolve with a proxy of our own methods, which is indistinguishable from
+    // a real host. Don't start one unless a parent frame exists to answer.
+    if (!isEmbedded()) return;
+
     let mounted = true;
 
     const guestMethods: GuestApiV1 = {
