@@ -1,8 +1,18 @@
 # The game is a workspace package depending on @chain/casino-sdk via file:../..,
 # so the install and build must run from the repo root, not from examples/ledge.
 [build]
-  command = "npm run build:ledge"
+  command = "npm ci && npm run build:ledge"
   publish = "examples/ledge/dist"
+
+# Only chain.wtf (the casino host) and its subdomains (the jam gallery, which iframes
+# entries for preview) may frame the game. Everything else is refused, so a look-alike
+# site cannot frame the live game and overlay deceptive UI over the bet controls.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "frame-ancestors 'self' https://chain.wtf https://*.chain.wtf"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
 
 # The chain.wtf host fetches the manifest cross-origin, so CORS must stay open.
 [[headers]]
