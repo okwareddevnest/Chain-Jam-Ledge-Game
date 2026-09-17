@@ -1,0 +1,17 @@
+# The game is a workspace package depending on @chain/casino-sdk via file:../..,
+# so the install and build must run from the repo root, not from examples/ledge.
+[build]
+  command = "npm run build:ledge"
+  publish = "examples/ledge/dist"
+
+# The chain.wtf host fetches the manifest cross-origin, so CORS must stay open.
+[[headers]]
+  for = "/game.manifest.json"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Cache-Control = "public, max-age=60"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

@@ -23,7 +23,13 @@ import {
   topOutcomeProbabilityWad,
 } from './ledge';
 
-const RPC_URL = 'http://127.0.0.1:8545';
+/**
+ * Point these at any network to verify a real deployment instead of the local chain:
+ *   LEDGE_VERIFY_RPC_URL=https://mainnet.base.org \
+ *   LEDGE_VERIFY_ADDRESS=0x... npm test
+ */
+const RPC_URL = process.env.LEDGE_VERIFY_RPC_URL?.trim() || 'http://127.0.0.1:8545';
+const OVERRIDE_ADDRESS = process.env.LEDGE_VERIFY_ADDRESS?.trim();
 const DEPLOYMENT_PATH = new URL('../../../../simulator/local-node/deployed.json', import.meta.url);
 
 const SESSION_CONTEXT = {
@@ -104,6 +110,13 @@ const ABI = [
 const WAGER = 1_000_000_000_000_000_000n; // 1 token at 18 decimals
 
 const loadGameAddress = (): `0x${string}` | null => {
+  if (OVERRIDE_ADDRESS) {
+    if (!/^0x[0-9a-fA-F]{40}$/.test(OVERRIDE_ADDRESS)) {
+      throw new Error('LEDGE_VERIFY_ADDRESS must be a 20-byte hex address.');
+    }
+    return OVERRIDE_ADDRESS as `0x${string}`;
+  }
+
   try {
     const deployment = JSON.parse(readFileSync(DEPLOYMENT_PATH, 'utf8')) as {
       games: Array<{ name: string; address: `0x${string}` }>;
@@ -146,7 +159,14 @@ const buildContext = (gameData: `0x${string}`, reservedProfit: bigint) =>
     gameState: '0x',
   }) as const;
 
-describe.skipIf(!live)('Solidity / TypeScript parity', () => {
+describe.skipIf(!live)(`Solidity / TypeScript parity against ${RPC_URL}`, () => {
+  it('is checking a contract that actually exists at the target address', async () => {
+    const code = await client.getCode({ address: address! });
+
+    expect(code).toBeDefined();
+    expect((code?.length ?? 0)).toBeGreaterThan(2);
+  });
+
   it('quotes identical caps for every one of the 126 allocations', async () => {
     for (const allocation of allAllocations()) {
       const gameData = encodeGameData(allocation);

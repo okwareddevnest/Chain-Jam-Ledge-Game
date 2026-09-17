@@ -16,7 +16,9 @@
   "scripts": {
     "check": "vp check",
     "check-types": "tsc --noEmit",
-    "start": "concurrently -k -n local-node,simulator,coinflip,ledge -c yellow,cyan,magenta,green \"npm --prefix simulator run local-node\" \"npm --prefix simulator run dev\" \"npm --prefix examples/coinflip-public run dev\" \"npm --prefix examples/ledge run dev\""
+    "start": "concurrently -k -n local-node,simulator,coinflip,ledge -c yellow,cyan,magenta,green \"npm --prefix simulator run local-node\" \"npm --prefix simulator run dev\" \"npm --prefix examples/coinflip-public run dev\" \"npm --prefix examples/ledge run dev\"",
+    "deploy:ledge": "tsx scripts/deploy-ledge.ts",
+    "build:ledge": "npm run build --workspace ledge-example"
   },
   "dependencies": {
     "penpal": "^7.0.4",
